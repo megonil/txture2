@@ -26,7 +26,7 @@ write_pixels (FILE* f, Color** pixels, ImageProps props)
 }
 
 void
-ppm_write (const char* filename, Color** pixels, ImageProps props)
+ppm_image (const char* filename, Color** pixels, ImageProps props)
 {
 	FILE* file = fopen (filename, "w+b");
 

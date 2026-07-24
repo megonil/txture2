@@ -5,10 +5,10 @@
 #include "image.h"
 
 #define ppm_magic "P6"
-#define ppm_filename ".ppm"
+#define ppm_ext ".ppm"
 
 /// Write to PPM file pixels
 void
-ppm_write (const char* filename, Color** pixels, ImageProps props);
+ppm_image (const char* filename, Color** pixels, ImageProps props);
 
 #endif // !TXTURE2_PPM_FORMAT_H

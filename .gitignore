@@ -4,3 +4,6 @@ build
 *.a
 *.out
 *.tmp
+
+# generator output
+out.*

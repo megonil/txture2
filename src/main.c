@@ -1,41 +1,35 @@
-#include "color.h"
-#include "formats/ppm.h"
-#include "utils.h"
+#include "writer.h"
 
+#include <color.h>
+#include <formats/ppm.h>
+#include <osc/simplex.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <time.h>
+#include <utils.h>
+
+float	simplex_freq = 1.0f;
+int64_t seed;
 
 int
 main (int argc, char* argv[])
 {
-	uint width = 400, height = 600;
+	uint width = 400, height = 600, max_colors = 255;
 
-	const char* filename = "out.ppm";
-	Color**		colors	 = malloc (sizeof (Color*) * height);
-
-	for (uint i = 0; i < height; ++i)
-		{
-			colors[i] = malloc (sizeof (Color) * width);
-
-			for (uint j = 0; j < width; ++j)
-				{
-#define c colors[i][j]
-					c.r = 100;
-					c.g = 250;
-					c.b = 50;
-				}
-		}
+	seed = time (0);
 
 	ImageProps props;
 	props.height	 = height;
 	props.width		 = width;
-	props.max_colors = 255;
+	props.max_colors = max_colors;
 
-	ppm_write (filename, colors, props);
+	const char* filename = "out" ppm_ext;
+	Colors		colors;
+	colors_init (&colors, width, height);
 
-	free (colors);
+	write_colors (colors, Simplex, props);
 
+	ppm_image (filename, colors, props);
+
+	colors_free (colors, height);
 	return 0;
 }

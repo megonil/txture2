@@ -1,5 +1,3 @@
-inc = include_directories('../../include/')
+gens = files('simplex.c')
 
-gens = files('perlin.c')
-
-osc_lib = static_library('osc', gens, include_directories: [inc])
+osc_lib = static_library('osc', gens, include_directories: incs, dependencies: [m_dep])

@@ -1,5 +1,9 @@
-# Minor version changes considered `dev`
+## `2.0.2` Changelog
 
-## 2.0.1 Changelog
+- introduced writers
+- simplex generator
+- better api, cleaner code.
 
-- .ppm format writing
+## `2.0.1` Changelog
+
+- .ppm format creating
