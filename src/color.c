@@ -16,31 +16,27 @@ colors_init (Colors* c, uint width, uint height)
 {
 	*c = malloc (sizeof (Color*) * height);
 
-	for (pxpos y = 0; y < height; ++y)
-		{
-			(*c)[y] = malloc (sizeof (Color) * width);
-		}
+	for (pxpos y = 0; y < height; ++y) {
+		(*c)[y] = malloc (sizeof (Color) * width);
+	}
 }
 
 void
 colors_for (Colors c, ImageProps p, forpixel f, void* s)
 {
-	for (pxpos y = 0; y < p.height; ++y)
-		{
-			for (pxpos x = 0; x < p.width; ++x)
-				{
-					apply_to_color (&c[y][x], f (x, y, p, s));
-				}
+	for (pxpos y = 0; y < p.height; ++y) {
+		for (pxpos x = 0; x < p.width; ++x) {
+			apply_to_color (&c[y][x], f (x, y, p, s));
 		}
+	}
 }
 
 void
 colors_free (Colors c, uint height)
 {
-	for (uint y = 0; y < height; ++y)
-		{
-			free (c[y]);
-		}
+	for (uint y = 0; y < height; ++y) {
+		free (c[y]);
+	}
 
 	free (c);
 }

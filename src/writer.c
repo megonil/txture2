@@ -21,11 +21,26 @@ simplex_prepare ()
 	return ctx;
 }
 
-pix
-simplex (pxpos x, pxpos y, ImageProps props, void* ctx)
+#define O(Name, prep, osc, clr)                                           \
+	if (streq (s, #Name)) {                                               \
+		return Name;                                                      \
+	}
+
+GeneratorType
+writer_from_string (const char* s)
 {
-	return to_pixsf (simplex_noise (ctx, x, y, simplex_freq),
-					 props.max_colors);
+	OSCS;
+	// else
+	error ("unknown generator: %s", s);
+}
+
+#undef O
+
+pix
+simplexf (pxpos x, pxpos y, ImageProps props, void* ctx)
+{
+	return to_pixsf (
+		simplex_noise (ctx, x, y, simplex_freq), props.max_colors);
 }
 
 void
@@ -34,8 +49,7 @@ simplex_clear (void* ctx)
 	simplex_free (ctx);
 }
 
-typedef struct
-{
+typedef struct {
 	preparefn prepare;
 	genfn	  genf;
 	clearfn	  clear;

@@ -6,7 +6,6 @@ ColumnLimit: 75
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: true
-BreakBeforeBraces: GNU
 NamespaceIndentation: All
 PointerAlignment: Left
 SpaceAfterCStyleCast: true
@@ -22,9 +21,15 @@ AlignTrailingComments: true
 Cpp11BracedListStyle: true
 AccessModifierOffset: -4
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
-AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortEnumsOnASingleLine: true
 AllowShortCaseLabelsOnASingleLine: true
-AlignAfterOpenBracket: Align
+AlignAfterOpenBracket: AlwaysBreak
 AlignEscapedNewlines: Right
 AlwaysBreakAfterReturnType: All
+SpaceBeforeParens: Always
+BinPackParameters: false
+BinPackArguments: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true

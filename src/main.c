@@ -1,35 +1,60 @@
+#include "cli.h"
+#include "formats/ppm.h"
+#include "image.h"
 #include "writer.h"
 
+#include <assert.h>
 #include <color.h>
-#include <formats/ppm.h>
-#include <osc/simplex.h>
+#include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
-#include <utils.h>
 
 float	simplex_freq = 1.0f;
 int64_t seed;
 
+static char*
+concat_filename (const char* base, const char* extension)
+{
+	assert (strlen (extension) == 4);
+	size_t base_len = strlen (base);
+
+	// 4 for the extension and 1 for nul-terminal
+	char* b = malloc (base_len + 5);
+	memcpy (b, base, base_len);
+	memcpy (b + base_len, extension, 4);
+	b[base_len + 4] = '\0';
+
+	return b;
+}
+
+static inline void
+initialize_seed ()
+{
+	seed = time (0);
+}
+
 int
 main (int argc, char* argv[])
 {
-	uint width = 400, height = 600, max_colors = 255;
+	initialize_seed ();
 
-	seed = time (0);
+	struct Settings settings;
+	parse_args (&settings, argc, argv);
 
-	ImageProps props;
-	props.height	 = height;
-	props.width		 = width;
-	props.max_colors = max_colors;
+	ImageProps image = settings.image_props;
 
-	const char* filename = "out" ppm_ext;
-	Colors		colors;
-	colors_init (&colors, width, height);
+	char* out_filename = concat_filename (settings.base_filename, ppm_ext);
 
-	write_colors (colors, Simplex, props);
+	Colors colors;
+	colors_init (&colors, image.width, image.height);
 
-	ppm_image (filename, colors, props);
+	write_colors (colors, settings.gentype, image);
+	ppm_image (out_filename, colors, image);
 
-	colors_free (colors, height);
+	free (out_filename);
+	colors_free (colors, image.height);
 	return 0;
 }
