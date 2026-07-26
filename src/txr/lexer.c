@@ -5,6 +5,7 @@
 #include "txr/token.h"
 #include "utils.h"
 
+#include <ctype.h>
 #include <stdint.h>
 
 /// value of float literal
@@ -13,11 +14,9 @@ float token_value = 0.0;
 /// error which happened during lexing
 LexError lexerr = LOK;
 
-#include <ctype.h>
-
 #define K(Kw, Str)                                                        \
 	(KeywordTableItem)                                                    \
-	{ .key = Str, .value = Kw, }
+	{ .key = Str, .value = TT##Kw, }
 
 static KeywordTable keywords;
 
@@ -56,9 +55,14 @@ lexer_free (Lexer* l)
 		next ();                                                          \
 	} while (0)
 
+#define clear_buffer() string_clear (lexer->buffer)
+
+/// lex number
+/// store result in token_value
 static TokenType
 number (Lexer* lexer)
 {
+	clear_buffer ();
 	if (curr == '-' || curr == '+') save_next ();
 
 	uint8_t dot = 0;
@@ -89,33 +93,38 @@ number (Lexer* lexer)
 	return TTNumber;
 }
 
-typedef TokenType (*lexfunction) (Lexer*);
-
-/// note: this function is not used yet
-/// this may be useful in the future
-/// @brief Try lexing using function f
-/// save result of that function to *result
-/// function f MUST return TTError in case some error
-/// returns 1 if try is successful
-/// returns 0 if not
-static int
-try_lex (Lexer* lexer, TokenType* result, lexfunction f)
+static inline int
+isid_char (char ch)
 {
-	const char* saved = lexer->current;
-	*result			  = f (lexer); // try
-
-	if (lexerr != LOK && *result == TTError) {
-		// restore
-		lexer->current = saved;
-		string_clear (lexer->buffer); // just in case
-		return 0;
-	}
-
-	// success
-	return 1;
+	const unsigned char c = (unsigned char) ch;
+	return isalnum (c) || c == '_';
 }
 
-#define isnext_digit() isdigit (peek (1))
+/// lex keyword OR identifier
+/// if it is keyword returns it's TokenType
+/// if it is identifier stores it in lexer->buffer
+/// and returns TTId
+static TokenType
+keyword_or_identifier (Lexer* lexer)
+{
+	clear_buffer ();
+	save_next (); // start of id
+
+	while (isid_char (curr)) save_next ();
+	array_push (lexer->buffer, '\0'); // end the string
+
+	if (KeywordTableContains (&keywords, lexer->buffer)) {
+		return *KeywordTableGet (&keywords, lexer->buffer);
+	}
+
+	return TTId;
+}
+
+typedef TokenType (*lexfunction) (Lexer*);
+
+#define isnext(f) f ((unsigned char) peek (1))
+#define isnext_digit() isnext (isdigit)
+#define isnext_alnum() isnext (isalnum)
 
 /// Skip whitespaces and comments
 static inline void
@@ -140,24 +149,33 @@ skip (Lexer* lexer)
 	}
 }
 
+static inline int
+isnumber_start (Lexer* lexer)
+{
+	const char c = (unsigned char) curr;
+	return ((c == '+' || c == '-') && isnext_digit ()) || isdigit (c);
+}
+
+static inline int
+isid_start (Lexer* lexer)
+{
+	const char c = (unsigned char) curr;
+	return (c == '_' && isnext_alnum ()) || isalpha (c);
+}
+
 TokenType
 lex (Lexer* lexer)
 {
-	string_clear (lexer->buffer);
 	skip (lexer);
 
-	unsigned char c = (unsigned char) curr;
+	// c is guaranteed to be either
+	// '\0' or not-whitespace regular character
+	const unsigned char c = (unsigned char) curr;
 
-	switch (c) {
-	case '\0': return TTEof;
-	default:
-		if (isdigit (c) || (c == '+' && isnext_digit ())
-			|| (c == '-' && isnext_digit ()))
-			return number (lexer);
+	if (c == '\0') return TTEof;
 
-		next ();
-		return (TokenType) c;
-	}
+	if (isnumber_start (lexer)) return number (lexer);
+	if (isid_start (lexer)) return keyword_or_identifier (lexer);
+
+	return (TokenType) c;
 }
-
-#undef curr

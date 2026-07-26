@@ -4,7 +4,7 @@
 #include <limits.h>
 
 #define KEYWORDS K (Alias, "alias")
-#define K(Variant, Str) Variant,
+#define K(Variant, Str) TT##Variant,
 
 typedef enum {
 	TTStart = UCHAR_MAX + 1,

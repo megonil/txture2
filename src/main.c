@@ -32,9 +32,7 @@ concat_filename (const char* base, const char* extension)
 
 static inline void
 initialize_seed ()
-{
-	seed = time (0);
-}
+{ seed = time (0); }
 
 int
 main (int argc, char* argv[])

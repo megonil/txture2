@@ -55,5 +55,9 @@ void
 test_lexer_spaces (void);
 void
 test_lexer_comments (void);
+void
+test_lexer_id ();
+void
+test_lexer_keyword ();
 
 #endif /* TABLE_TEST_H */

@@ -41,6 +41,8 @@ main (void)
 	RUN_TEST (test_lexer_eof);
 	RUN_TEST (test_lexer_spaces);
 	RUN_TEST (test_lexer_comments);
+	RUN_TEST (test_lexer_id);
+	RUN_TEST (test_lexer_keyword);
 
 	return UNITY_END ();
 }

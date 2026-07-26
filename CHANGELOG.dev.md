@@ -1,3 +1,12 @@
+## `2.0.7` Changelog
+
+- keywords and identifiers lexing
+
+## `2.0.6` Changelog
+
+- correct space skipping
+- comments skipping
+
 ## `2.0.5` Changelog
 
 - txr language lexer

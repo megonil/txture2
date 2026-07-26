@@ -49,7 +49,35 @@ check_error ()
 
 #define expect_lineno(L) TEST_ASSERT_EQUAL_INT (L, l.lineno)
 
+#define id(s)                                                             \
+	lex_one ();                                                           \
+	good ();                                                              \
+	expectT (TTId);                                                       \
+	TEST_ASSERT_EQUAL_STRING (s, l.buffer)
+
 #define end() lexer_free (&l);
+
+#define char(c)                                                           \
+	lex_one ();                                                           \
+	good ();                                                              \
+	expectT ((TokenType) c)
+
+void
+test_lexer_character ()
+{
+	prelude ("() * = + - / $");
+	char ('(');
+	char (')');
+	char ('*');
+	char ('=');
+	char ('+');
+	char ('-');
+	char ('/');
+	char ('$');
+
+	eof ();
+	end ();
+}
 
 void
 test_lexer_integer ()
@@ -57,6 +85,7 @@ test_lexer_integer ()
 	prelude ("123");
 	expect_lit (123.0f);
 
+	eof ();
 	end ();
 }
 
@@ -66,6 +95,7 @@ test_lexer_float ()
 	prelude ("123.53189");
 	expect_lit (123.53189f);
 
+	eof ();
 	end ();
 }
 
@@ -76,6 +106,7 @@ test_lexer_exponential ()
 	expect_lit (123e-10f);
 	expect_lit (123e+10f);
 
+	eof ();
 	end ();
 }
 
@@ -88,6 +119,7 @@ test_lexer_signed ()
 	expect_lit (0.0f);
 	expect_lit (0.0f);
 
+	eof ();
 	end ();
 }
 
@@ -117,5 +149,26 @@ test_lexer_comments ()
 	eof ();
 
 	expect_lineno (3);
+	end ();
+}
+
+void
+test_lexer_keyword ()
+{
+	prelude ("alias");
+	expect (TTAlias);
+
+	eof ();
+	end ();
+}
+
+void
+test_lexer_id ()
+{
+	prelude ("abcd _someide234ntifier");
+	id ("abcd");
+	id ("_someide234ntifier");
+
+	eof ();
 	end ();
 }
