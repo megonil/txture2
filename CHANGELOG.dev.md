@@ -1,3 +1,9 @@
+## `2.0.4` Changelog
+
+- dynamic array implementation
+- hashmap implementation
+- collections testing
+
 ## `2.0.3` Changelog
 
 - cli arguments parsing

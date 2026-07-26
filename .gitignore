@@ -8,3 +8,6 @@ build
 # generator output
 out.*
 *.ppm
+
+subprojects/*
+!subprojects/*.wrap
