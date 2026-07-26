@@ -1,0 +1,9 @@
+# it is not necessary to define
+# all R, G anb B variables
+
+R = 100
+
+G = 200
+
+# B is not defined so its value is 0
+# by default

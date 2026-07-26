@@ -1,3 +1,8 @@
+## `2.0.5` Changelog
+
+- txr language lexer
+- lexing tests
+
 ## `2.0.4` Changelog
 
 - dynamic array implementation

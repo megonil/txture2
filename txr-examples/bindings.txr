@@ -1,0 +1,18 @@
+# You can define your own variables
+
+something = 50
+something = something + 10
+
+# and a bindings
+# called aliases
+# aliases are unmutable
+
+# time() - unix time
+alias T = time()
+
+# overflow, but we don't care
+R = T * something
+
+G = T / 20
+
+B = T % 10

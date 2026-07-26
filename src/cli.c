@@ -1,5 +1,7 @@
 #include "cli.h"
 
+#include "utils.h"
+
 #include <cargs.h>
 #include <errno.h>
 #include <writer.h>
@@ -56,36 +58,20 @@ static const struct cag_option options[] = {
 static float
 parse (const char* s, const char* m)
 {
-	errno = 0;
-	char*		end;
-	const float i = strtof (s, &end);
-	if (s == end) {
-		error ("expected %s as an argument", m);
-	}
-
-	const int range_error = errno == ERANGE;
-	if (range_error) {
-		error ("too big argument");
-	}
-
-	if (i <= 0.0f) {
-		error ("expected a positive %s as an argument", m);
-	}
+	int			ok;
+	const float i = parse_float (s, &ok);
+	if (!ok || i < 0.0f) { error ("wrong option argument %s", m); }
 
 	return i;
 }
 
 static inline float
-parse_float (const char* s)
-{
-	return parse (s, "float number");
-}
+parse_flt (const char* s)
+{ return parse (s, "float number"); }
 
 static uint
 parse_uint (const char* s)
-{
-	return (uint) parse (s, "integer");
-}
+{ return (uint) parse (s, "integer"); }
 
 static _Noreturn void
 usage (cag_option_context* ctx)
@@ -102,10 +88,10 @@ usage (cag_option_context* ctx)
 	case c:                                                               \
 		value = cag_option_get_value (&ctx);                              \
 		v	  = parse_##t (value);                                        \
-		break;
+		break
 
 #define option_uint(c, v) option_v (c, v, uint)
-#define option_float(c, v) option_v (c, v, float)
+#define option_float(c, v) option_v (c, v, flt)
 
 void
 parse_args (struct Settings* out, int argc, char* argv[])

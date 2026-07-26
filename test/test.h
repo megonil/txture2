@@ -41,4 +41,15 @@ test_StringTable (void);
 void
 test_NumTable (void);
 
+void
+test_lexer_integer (void);
+void
+test_lexer_float (void);
+void
+test_lexer_signed (void);
+void
+test_lexer_eof (void);
+void
+test_lexer_exponential (void);
+
 #endif /* TABLE_TEST_H */

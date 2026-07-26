@@ -1,0 +1,13 @@
+# Put all your directives
+# in the start of the file
+
+# expandAll means
+# multiplty all RGB components by the max_colors value
+# also there is expandR, expandG, expandB
+expandAll
+
+# percentage means
+# all RGB components contains float values in the range of
+# [0..1.0]
+# also there is percentageR, percentageG, percentageB
+percentageAll

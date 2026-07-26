@@ -34,5 +34,11 @@ main (void)
 	RUN_TEST (test_StringTable);
 	RUN_TEST (test_NumTable);
 
+	RUN_TEST (test_lexer_integer);
+	RUN_TEST (test_lexer_float);
+	RUN_TEST (test_lexer_signed);
+	RUN_TEST (test_lexer_exponential);
+	RUN_TEST (test_lexer_eof);
+
 	return UNITY_END ();
 }

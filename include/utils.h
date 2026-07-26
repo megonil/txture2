@@ -21,4 +21,7 @@ typedef uint64_t pxpos;
 
 #define streq(a, b) strcmp (a, b) == 0
 
+float
+parse_float (const char* b, int* result);
+
 #endif // !TXTURE2_UTILS_H

@@ -9,6 +9,7 @@ subdir('formats')
 subdir('osc')
 subdir('txr')
 
+utils_lib = static_library('utils', ['utils.c'], include_directories: incs)
 writer_lib = static_library('writer', ['writer.c'], include_directories: incs)
 color_lib = static_library('color', ['color.c'], include_directories: incs)
 cli_lib = static_library('cli', ['cli.c'], include_directories: incs, link_with: cargs_lib)
@@ -16,6 +17,7 @@ array_lib = static_library('array', ['array.c'], include_directories: incs)
 table_lib = static_library('table', ['table.c'], include_directories: incs)
 
 libs = [
+	utils_lib,
 	formats_lib,
 	osc_lib,
 	writer_lib,
@@ -37,7 +39,7 @@ executable(
 # Testing
 
 unity_dep = dependency('unity') # subproject
-test_src = files('../test/array.c', '../test/main.c', '../test/table.c')
+test_src = files('../test/array.c', '../test/lexer.c', '../test/main.c', '../test/table.c')
 test_exe = executable(
 	'txture2test',
 	test_src,

@@ -33,10 +33,10 @@ typedef struct {
 #define array_inc(arr) len (arr)++
 
 #define array_pop(arr) arr[--len (arr)]
-#define foreach(arr, name) for (int name = 0; name < len (arr); ++name)
+#define foreach(arr, name) for (size_t name = 0; name < len (arr); ++name)
 
 #define string() array (char)
-#define stringClear(arr)                                                  \
+#define string_clear(arr)                                                 \
 	do {                                                                  \
 		arr[0]	  = '\0';                                                 \
 		len (arr) = 0;                                                    \

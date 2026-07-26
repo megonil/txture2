@@ -1,5 +1,7 @@
 #include "table.h"
 
+#include "txr/token.h"
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -232,5 +234,6 @@ intcmp (int a, int b)
 
 implementstr (, const char*, int, strequ, murmur);
 implementstr (String, const char*, const char*, strequ, murmur);
+implementstr (Keyword, const char*, TokenType, strequ, murmur)
 
-implement (Num, int, int, intcmp, hash32)
+	implement (Num, int, int, intcmp, hash32)

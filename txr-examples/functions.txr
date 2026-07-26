@@ -1,0 +1,7 @@
+# You can define your own functions
+
+add(x, y) = x + y
+
+R = add(20, 70) # 90
+
+# G and B is 0

@@ -125,7 +125,7 @@ test_string_clear (void)
 	array_push (str, 'b');
 	array_push (str, '\0');
 
-	stringClear (str);
+	string_clear (str);
 
 	TEST_ASSERT_EQUAL_UINT (0, len (str));
 	TEST_ASSERT_EQUAL_CHAR ('\0', str[0]);
