@@ -6,9 +6,9 @@
 #include <stddef.h>
 
 typedef struct {
-	size_t lineno;
-	char*  buffer;
-	char*  current;
+	size_t		lineno;
+	char*		buffer;
+	const char* current;
 } Lexer;
 
 #define LERROR                                                            \

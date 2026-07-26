@@ -45,6 +45,10 @@ check_error ()
 	TEST_ASSERT_EQUAL_INT (TTError, t);                                   \
 	expectE (E)
 
+#define eof() expect (TTEof)
+
+#define expect_lineno(L) TEST_ASSERT_EQUAL_INT (L, l.lineno)
+
 #define end() lexer_free (&l);
 
 void
@@ -91,7 +95,27 @@ void
 test_lexer_eof ()
 {
 	prelude ("");
-	expect (TTEof);
 
+	eof ();
 	end ()
+}
+
+void
+test_lexer_spaces ()
+{
+	prelude ("      \t\n\r");
+
+	eof ();
+	end ()
+}
+
+void
+test_lexer_comments ()
+{
+	prelude ("# This is a comment!\n 123 \n # This is also a comment!");
+	expect_lit (123.0f);
+	eof ();
+
+	expect_lineno (3);
+	end ();
 }

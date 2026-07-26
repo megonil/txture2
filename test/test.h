@@ -51,5 +51,9 @@ void
 test_lexer_eof (void);
 void
 test_lexer_exponential (void);
+void
+test_lexer_spaces (void);
+void
+test_lexer_comments (void);
 
 #endif /* TABLE_TEST_H */

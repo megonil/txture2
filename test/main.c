@@ -39,6 +39,8 @@ main (void)
 	RUN_TEST (test_lexer_signed);
 	RUN_TEST (test_lexer_exponential);
 	RUN_TEST (test_lexer_eof);
+	RUN_TEST (test_lexer_spaces);
+	RUN_TEST (test_lexer_comments);
 
 	return UNITY_END ();
 }

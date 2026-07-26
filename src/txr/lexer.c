@@ -5,9 +5,7 @@
 #include "txr/token.h"
 #include "utils.h"
 
-#include <errno.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 /// value of float literal
 float token_value = 0.0;
@@ -95,16 +93,16 @@ typedef TokenType (*lexfunction) (Lexer*);
 
 /// note: this function is not used yet
 /// this may be useful in the future
-/// try lexing using function f
+/// @brief Try lexing using function f
 /// save result of that function to *result
-/// function f MUST return TTError
-/// return 1 if try is successful
-/// return 0 if not
+/// function f MUST return TTError in case some error
+/// returns 1 if try is successful
+/// returns 0 if not
 static int
 try_lex (Lexer* lexer, TokenType* result, lexfunction f)
 {
-	char* saved = lexer->current;
-	*result		= f (lexer); // try
+	const char* saved = lexer->current;
+	*result			  = f (lexer); // try
 
 	if (lexerr != LOK && *result == TTError) {
 		// restore
@@ -119,28 +117,42 @@ try_lex (Lexer* lexer, TokenType* result, lexfunction f)
 
 #define isnext_digit() isdigit (peek (1))
 
+/// Skip whitespaces and comments
+static inline void
+skip (Lexer* lexer)
+{
+	for (;;) {
+		while (isspace ((unsigned char) curr)) {
+			if (curr == '\n') lexer->lineno++;
+
+			next ();
+		}
+
+		if (curr == '#') {
+			do {
+				next ();
+			} while (curr != '\n' && curr != '\0');
+
+			continue;
+		}
+
+		break;
+	}
+}
+
 TokenType
 lex (Lexer* lexer)
 {
 	string_clear (lexer->buffer);
+	skip (lexer);
 
 	unsigned char c = (unsigned char) curr;
 
 	switch (c) {
-	case ' ':
-	case '\t': next (); return lex (lexer);
 	case '\0': return TTEof;
-
-	case '\n':
-	case '\r':
-		lexer->lineno++;
-		next ();
-		break;
-
 	default:
 		if (isdigit (c) || (c == '+' && isnext_digit ())
 			|| (c == '-' && isnext_digit ()))
-
 			return number (lexer);
 
 		next ();
