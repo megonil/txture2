@@ -2,6 +2,8 @@
 #include "unity.h"
 #include "unity_internals.h"
 
+#include <string.h>
+
 void
 setUp (void)
 {
@@ -16,33 +18,19 @@ int
 main (void)
 {
 	UNITY_BEGIN ();
-	// array and string(char array)
-	RUN_TEST (test_array_init);
-	RUN_TEST (test_array_push_one);
-	RUN_TEST (test_array_push_many);
-	RUN_TEST (test_array_pop);
-	RUN_TEST (test_array_large);
-	RUN_TEST (test_array_empty);
-	RUN_TEST (test_array_struct);
-	RUN_TEST (test_array_grow);
-	RUN_TEST (test_array_char);
-	RUN_TEST (test_string_clear);
+	static const char* current_group = "";
 
-	// table
-	RUN_TEST (test_Table_init_free);
-	RUN_TEST (test_Table_insert_get_update_remove);
-	RUN_TEST (test_StringTable);
-	RUN_TEST (test_NumTable);
+#define TEST(Name, Group)                                                 \
+	do {                                                                  \
+		if (strcmp (current_group, Group) != 0) {                         \
+			current_group = Group;                                        \
+			printf ("\n=== %s ===\n", Group);                             \
+		}                                                                 \
+		RUN_TEST (test_##Name);                                           \
+	} while (0);
+	TESTS
 
-	RUN_TEST (test_lexer_integer);
-	RUN_TEST (test_lexer_float);
-	RUN_TEST (test_lexer_signed);
-	RUN_TEST (test_lexer_exponential);
-	RUN_TEST (test_lexer_eof);
-	RUN_TEST (test_lexer_spaces);
-	RUN_TEST (test_lexer_comments);
-	RUN_TEST (test_lexer_id);
-	RUN_TEST (test_lexer_keyword);
+#undef TEST
 
 	return UNITY_END ();
 }

@@ -23,16 +23,17 @@ typedef struct {
 #define array_empty(arr) (len (arr) == 0)
 #define array_reserve(arr, items) arr = array_resize (arr, items)
 
-#define array_pushj(arr, val) arr[len (arr)++] = val
-#define array_push(arr, val)                                              \
+#define pushj(arr, val) arr[len (arr)++] = val
+#define push(arr, val)                                                    \
 	do {                                                                  \
 		array_reserve (arr, 1);                                           \
-		array_pushj (arr, val);                                           \
+		pushj (arr, val);                                                 \
 	} while (0)
 
 #define array_inc(arr) len (arr)++
 
-#define array_pop(arr) arr[--len (arr)]
+#define pop(arr) arr[--len (arr)]
+#define last(arr) arr[len (arr) - 1]
 #define foreach(arr, name) for (size_t name = 0; name < len (arr); ++name)
 
 #define string() array (char)

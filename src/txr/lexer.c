@@ -51,7 +51,7 @@ lexer_free (Lexer* l)
 
 #define save_next()                                                       \
 	do {                                                                  \
-		array_push (lexer->buffer, curr);                                 \
+		push (lexer->buffer, curr);                                       \
 		next ();                                                          \
 	} while (0)
 
@@ -88,7 +88,7 @@ number (Lexer* lexer)
 	int ok;
 	token_value = parse_float (lexer->buffer, &ok);
 	if (!ok) seterr (WrongFloatLiteral);
-	if (isalpha (curr)) seterr (LetterTouchingLetter);
+	if (isalpha (curr)) seterr (LetterTouchingNumber);
 
 	return TTNumber;
 }
@@ -111,7 +111,7 @@ keyword_or_identifier (Lexer* lexer)
 	save_next (); // start of id
 
 	while (isid_char (curr)) save_next ();
-	array_push (lexer->buffer, '\0'); // end the string
+	push (lexer->buffer, '\0'); // end the string
 
 	if (KeywordTableContains (&keywords, lexer->buffer)) {
 		return *KeywordTableGet (&keywords, lexer->buffer);

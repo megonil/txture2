@@ -20,7 +20,7 @@ test_array_push_one (void)
 {
 	int* arr = array (int);
 
-	array_push (arr, 42);
+	push (arr, 42);
 
 	TEST_ASSERT_EQUAL_UINT (1, len (arr));
 	TEST_ASSERT_EQUAL_INT (42, arr[0]);
@@ -33,7 +33,7 @@ test_array_push_many (void)
 {
 	int* arr = array (int);
 
-	for (int i = 0; i < 100; i++) array_push (arr, i);
+	for (int i = 0; i < 100; i++) push (arr, i);
 
 	TEST_ASSERT_EQUAL_UINT (100, len (arr));
 
@@ -49,9 +49,9 @@ test_array_grow (void)
 
 	TEST_ASSERT_EQUAL_UINT (2, cap (arr));
 
-	array_push (arr, 1);
-	array_push (arr, 2);
-	array_push (arr, 3);
+	push (arr, 1);
+	push (arr, 2);
+	push (arr, 3);
 
 	TEST_ASSERT_TRUE (cap (arr) >= 3);
 	TEST_ASSERT_EQUAL_UINT (3, len (arr));
@@ -64,17 +64,17 @@ test_array_pop (void)
 {
 	int* arr = array (int);
 
-	array_push (arr, 10);
-	array_push (arr, 20);
-	array_push (arr, 30);
+	push (arr, 10);
+	push (arr, 20);
+	push (arr, 30);
 
-	TEST_ASSERT_EQUAL_INT (30, array_pop (arr));
+	TEST_ASSERT_EQUAL_INT (30, pop (arr));
 	TEST_ASSERT_EQUAL_UINT (2, len (arr));
 
-	TEST_ASSERT_EQUAL_INT (20, array_pop (arr));
+	TEST_ASSERT_EQUAL_INT (20, pop (arr));
 	TEST_ASSERT_EQUAL_UINT (1, len (arr));
 
-	TEST_ASSERT_EQUAL_INT (10, array_pop (arr));
+	TEST_ASSERT_EQUAL_INT (10, pop (arr));
 	TEST_ASSERT_EQUAL_UINT (0, len (arr));
 
 	array_free (arr);
@@ -90,8 +90,8 @@ test_array_struct (void)
 {
 	Point* arr = array (Point);
 
-	array_push (arr, ((Point){1, 2}));
-	array_push (arr, ((Point){3, 4}));
+	push (arr, ((Point){1, 2}));
+	push (arr, ((Point){3, 4}));
 
 	TEST_ASSERT_EQUAL_INT (1, arr[0].x);
 	TEST_ASSERT_EQUAL_INT (2, arr[0].y);
@@ -107,9 +107,9 @@ test_array_char (void)
 {
 	char* str = string ();
 
-	array_push (str, 'H');
-	array_push (str, 'i');
-	array_push (str, '\0');
+	push (str, 'H');
+	push (str, 'i');
+	push (str, '\0');
 
 	TEST_ASSERT_EQUAL_STRING ("Hi", str);
 
@@ -121,9 +121,9 @@ test_string_clear (void)
 {
 	char* str = string ();
 
-	array_push (str, 'a');
-	array_push (str, 'b');
-	array_push (str, '\0');
+	push (str, 'a');
+	push (str, 'b');
+	push (str, '\0');
 
 	string_clear (str);
 
@@ -140,7 +140,7 @@ test_array_empty (void)
 
 	TEST_ASSERT_TRUE (array_empty (arr));
 
-	array_push (arr, 1);
+	push (arr, 1);
 
 	TEST_ASSERT_FALSE (array_empty (arr));
 
@@ -152,7 +152,7 @@ test_array_large (void)
 {
 	int* arr = array (int);
 
-	for (int i = 0; i < 100000; i++) array_push (arr, i);
+	for (int i = 0; i < 100000; i++) push (arr, i);
 
 	TEST_ASSERT_EQUAL_UINT (100000, len (arr));
 

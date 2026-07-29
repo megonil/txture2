@@ -6,6 +6,7 @@
 // hashmap
 
 #include "txr/token.h"
+#include "txr/value.h"
 
 #include <stdint.h>
 
@@ -57,6 +58,7 @@ typedef uint32_t hash_t;
 define_tablestr (justtable, const char*, int);
 define_tablestr (String, const char*, const char*);
 define_tablestr (Keyword, const char*, TokenType);
+define_tablestr (Variable, const char*, value);
 
 #undef justtable
 

@@ -24,4 +24,12 @@ typedef uint64_t pxpos;
 float
 parse_float (const char* b, int* result);
 
+#define from_u24()                                                        \
+	((uint32_t) high << 16) | ((uint32_t) mid << 8) | (uint32_t) low
+
+#define to_u24(v)                                                         \
+	uint8_t low	 = (v) & 0xFF;                                            \
+	uint8_t mid	 = ((v) >> 8) & 0xFF;                                     \
+	uint8_t high = ((v) >> 16) & 0xFF
+
 #endif // !TXTURE2_UTILS_H

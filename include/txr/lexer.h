@@ -14,7 +14,7 @@ typedef struct {
 #define LERROR                                                            \
 	L (DoubleDot, "double dot in float literal")                          \
 	L (WrongFloatLiteral, "wrong float literal")                          \
-	L (LetterTouchingLetter, "letter touching letter")
+	L (LetterTouchingNumber, "letter touching number")
 
 #define L(E, M) E,
 typedef enum { LOK = -1, LERROR } LexError;
@@ -32,6 +32,7 @@ lexer_init (Lexer* l, const char* source);
 TokenType
 lex (Lexer* lexer);
 
+// TODO:
 TokenType
 preprocess_lex (Lexer* lexer);
 

@@ -6,58 +6,52 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void
-setUp (void);
-void
-tearDown (void);
+#define ARRAY                                                             \
+	TEST (array_init, "array")                                            \
+	TEST (array_push_one, "array")                                        \
+	TEST (array_push_many, "array")                                       \
+	TEST (array_grow, "array")                                            \
+	TEST (array_pop, "array")                                             \
+	TEST (array_struct, "array")                                          \
+	TEST (array_char, "array")                                            \
+	TEST (string_clear, "array")                                          \
+	TEST (array_empty, "array")                                           \
+	TEST (array_large, "array")
 
-void
-test_array_init (void);
-void
-test_array_push_one (void);
-void
-test_array_push_many (void);
-void
-test_array_grow (void);
-void
-test_array_pop (void);
-void
-test_array_struct (void);
-void
-test_array_char (void);
-void
-test_string_clear (void);
-void
-test_array_empty (void);
-void
-test_array_large (void);
+#define LEXER                                                             \
+	TEST (lexer_integer, "lexer")                                         \
+	TEST (lexer_float, "lexer")                                           \
+	TEST (lexer_signed, "lexer")                                          \
+	TEST (lexer_eof, "lexer")                                             \
+	TEST (lexer_exponential, "lexer")                                     \
+	TEST (lexer_spaces, "lexer")                                          \
+	TEST (lexer_comments, "lexer")                                        \
+	TEST (lexer_id, "lexer")                                              \
+	TEST (lexer_keyword, "lexer")
 
-void
-test_Table_init_free (void);
-void
-test_Table_insert_get_update_remove (void);
-void
-test_StringTable (void);
-void
-test_NumTable (void);
+#define TABLE                                                             \
+	TEST (Table_init_free, "table")                                       \
+	TEST (Table_insert_get_update_remove, "table")                        \
+	TEST (StringTable, "table")                                           \
+	TEST (NumTable, "table")
 
-void
-test_lexer_integer (void);
-void
-test_lexer_float (void);
-void
-test_lexer_signed (void);
-void
-test_lexer_eof (void);
-void
-test_lexer_exponential (void);
-void
-test_lexer_spaces (void);
-void
-test_lexer_comments (void);
-void
-test_lexer_id ();
-void
-test_lexer_keyword ();
+#define CHUNK                                                             \
+	TEST (chunk, "chunk")                                                 \
+	TEST (chunk_byte, "chunk")                                            \
+	TEST (chunk_constant, "chunk")                                        \
+	TEST (chunk_expanded, "chunk")
 
-#endif /* TABLE_TEST_H */
+#define TESTS                                                             \
+	ARRAY                                                                 \
+	LEXER                                                                 \
+	TABLE                                                                 \
+	CHUNK
+
+#define testname(Name) test_##Name
+#define testfn(Name) void testname (Name) (void)
+
+#define TEST(Name, Group) testfn (Name);
+TESTS
+#undef TEST
+
+#endif // !TXTURE_TEST_H

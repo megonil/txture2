@@ -39,7 +39,13 @@ executable(
 # Testing
 
 unity_dep = dependency('unity') # subproject
-test_src = files('../test/array.c', '../test/lexer.c', '../test/main.c', '../test/table.c')
+test_src = files(
+	'../test/array.c',
+	'../test/chunk.c',
+	'../test/lexer.c',
+	'../test/main.c',
+	'../test/table.c',
+)
 test_exe = executable(
 	'txture2test',
 	test_src,
