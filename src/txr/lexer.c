@@ -55,7 +55,7 @@ lexer_free (Lexer* l)
 		next ();                                                          \
 	} while (0)
 
-#define clear_buffer() string_clear (lexer->buffer)
+#define clear_buffer() array_clear (lexer->buffer)
 
 /// lex number
 /// store result in token_value
@@ -177,5 +177,6 @@ lex (Lexer* lexer)
 	if (isnumber_start (lexer)) return number (lexer);
 	if (isid_start (lexer)) return keyword_or_identifier (lexer);
 
+	next ();
 	return (TokenType) c;
 }

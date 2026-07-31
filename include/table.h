@@ -58,11 +58,12 @@ typedef uint32_t hash_t;
 define_tablestr (justtable, const char*, int);
 define_tablestr (String, const char*, const char*);
 define_tablestr (Keyword, const char*, TokenType);
-define_tablestr (Variable, const char*, value);
+define_tablestr (Variable, const char*, tvalue);
 
 #undef justtable
 
 define_table (Num, int, int);
+define_table (Constant, tvalue, uint32_t);
 
 #define TableInitList(Name, table, ...)                                   \
 	do {                                                                  \

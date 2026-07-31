@@ -2,6 +2,8 @@
 
 #include "unity.h"
 
+#include <string.h>
+
 void
 test_array_init (void)
 {
@@ -125,10 +127,10 @@ test_string_clear (void)
 	push (str, 'b');
 	push (str, '\0');
 
-	string_clear (str);
+	array_clear (str);
+	push (str, 'a');
 
-	TEST_ASSERT_EQUAL_UINT (0, len (str));
-	TEST_ASSERT_EQUAL_CHAR ('\0', str[0]);
+	TEST_ASSERT_EQUAL_STRING ("a", str);
 
 	array_free (str);
 }

@@ -1,3 +1,7 @@
+if get_option('txture2_debug')
+	add_project_arguments('-DTXTURE2_DEBUG', language: ['c'])
+endif
+
 # Setup
 incs = [include_directories('../include')]
 cc = meson.get_compiler('c')
@@ -44,6 +48,7 @@ test_src = files(
 	'../test/chunk.c',
 	'../test/lexer.c',
 	'../test/main.c',
+	'../test/parser.c',
 	'../test/table.c',
 )
 test_exe = executable(

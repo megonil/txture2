@@ -172,3 +172,29 @@ test_lexer_id ()
 	eof ();
 	end ();
 }
+
+void
+test_lexer_binary ()
+{
+	prelude ("123.5 + 5690e-10");
+	expect_lit (123.5f);
+	expect ('+');
+	expect_lit (5690e-10);
+
+	eof ();
+	end ();
+}
+
+void
+test_lexer_complex_numbers ()
+{
+	prelude ("-1234.56 + 12345 * 500");
+	expect_lit (-1234.56f);
+	expect ('+');
+	expect_lit (12345);
+	expect ('*');
+	expect_lit (500);
+
+	eof ();
+	end ();
+}

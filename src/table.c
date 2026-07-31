@@ -55,21 +55,27 @@ murmur (const char* value)
 
 static hash_t
 hash32 (uint32_t i)
-{
-	return (hash_t) i;
-}
+{ return (hash_t) i; }
 
 static int
 strequ (const char* a, const char* b)
-{
-	return strcmp (a, b) == 0;
-}
+{ return strcmp (a, b) == 0; }
 
 static int
 intcmp (int a, int b)
+{ return a == b; }
+
+static hash_t
+hashdbl (double x)
 {
-	return a == b;
+	uint64_t bits;
+	memcpy (&bits, &x, sizeof (bits));
+	return bits;
 }
+
+static int
+dblequ (double x, double y)
+{ return x == y; }
 
 #define implementfull(Name, K, V, cmp, hashfn)                            \
                                                                           \
@@ -106,9 +112,7 @@ intcmp (int a, int b)
                                                                           \
 		for (int i = 0; i < table->cap; ++i) {                            \
 			Name##TableItem* item = table->entries + i;                   \
-			if (item->key == TOMBSTONE_K (K)) {                           \
-				continue;                                                 \
-			}                                                             \
+			if (item->key == TOMBSTONE_K (K)) { continue; }               \
                                                                           \
 			Name##TableItem* dest = Name##probe (                         \
 				table, newentries, item->key, newcapacity);               \
@@ -131,25 +135,19 @@ intcmp (int a, int b)
 		Name##TableItem* dest                                             \
 			= Name##probe (table, table->entries, key, table->cap);       \
 		int isnew = dest->key == TOMBSTONE_K (K);                         \
-		if (isnew && dest->value == TOMBSTONE_V (V)) {                    \
-			table->size++;                                                \
-		}                                                                 \
+		if (isnew && dest->value == TOMBSTONE_V (V)) { table->size++; }   \
 		Name##TableAssign (dest, key, value, hashfn (key));               \
 		return isnew;                                                     \
 	}                                                                     \
                                                                           \
 	V* Name##TableGet (Name##Table* table, K key)                         \
 	{                                                                     \
-		if (table->size == 0) {                                           \
-			return 0;                                                     \
-		}                                                                 \
+		if (table->size == 0) { return 0; }                               \
                                                                           \
 		Name##TableItem* item                                             \
 			= Name##probe (table, table->entries, key, table->cap);       \
                                                                           \
-		if (item->key == TOMBSTONE_K (K)) {                               \
-			return 0;                                                     \
-		}                                                                 \
+		if (item->key == TOMBSTONE_K (K)) { return 0; }                   \
                                                                           \
 		return &item->value;                                              \
 	}                                                                     \
@@ -158,18 +156,14 @@ intcmp (int a, int b)
 	{                                                                     \
 		Name##TableItem* item                                             \
 			= Name##probe (table, table->entries, key, table->cap);       \
-		if (item->key == TOMBSTONE_K (K)) {                               \
-			return 0;                                                     \
-		}                                                                 \
+		if (item->key == TOMBSTONE_K (K)) { return 0; }                   \
                                                                           \
 		return 1;                                                         \
 	}                                                                     \
                                                                           \
 	void Name##TableRemove (Name##Table* table, K key)                    \
 	{                                                                     \
-		if (table->size == 0) {                                           \
-			return;                                                       \
-		}                                                                 \
+		if (table->size == 0) { return; }                                 \
                                                                           \
 		Name##TableItem* item                                             \
 			= Name##probe (table, table->entries, key, table->cap);       \
@@ -196,9 +190,7 @@ intcmp (int a, int b)
 
 #define implement(Name, K, V, cmp, hashfn)                                \
 	static int Name##TableCmp (Name##TableItem* a, K key, hash_t hash)    \
-	{                                                                     \
-		return cmp (a->key, key);                                         \
-	}                                                                     \
+	{ return cmp (a->key, key); }                                         \
 	static void Name##TableAssign (                                       \
 		Name##TableItem* item, K key, V value, hash_t hash)               \
 	{                                                                     \
@@ -207,17 +199,13 @@ intcmp (int a, int b)
 		item->key	= key;                                                \
 	}                                                                     \
 	static inline hash_t Name##TableHashOf (Name##TableItem* item)        \
-	{                                                                     \
-		return hashfn (item->key);                                        \
-	}                                                                     \
+	{ return hashfn (item->key); }                                        \
                                                                           \
 	implementfull (Name, K, V, cmp, hashfn)
 
 #define implementstr(Name, K, V, cmp, hashfn)                             \
 	static int Name##TableCmp (Name##TableItem* a, K key, hash_t hash)    \
-	{                                                                     \
-		return a->hash == hash && cmp (a->key, key);                      \
-	}                                                                     \
+	{ return a->hash == hash && cmp (a->key, key); }                      \
 	static void Name##TableAssign (                                       \
 		Name##TableItem* item, K key, V value, hash_t hash)               \
 	{                                                                     \
@@ -226,14 +214,14 @@ intcmp (int a, int b)
 		item->hash	= hash;                                               \
 	}                                                                     \
 	static inline hash_t Name##TableHashOf (Name##TableItem* item)        \
-	{                                                                     \
-		return item->hash;                                                \
-	}                                                                     \
+	{ return item->hash; }                                                \
                                                                           \
 	implementfull (Name, K, V, cmp, hashfn)
 
 implementstr (, const char*, int, strequ, murmur);
 implementstr (String, const char*, const char*, strequ, murmur);
-implementstr (Keyword, const char*, TokenType, strequ, murmur)
+implementstr (Keyword, const char*, TokenType, strequ, murmur);
+implementstr (Variable, const char*, tvalue, strequ, murmur);
 
-	implement (Num, int, int, intcmp, hash32)
+implement (Num, int, int, intcmp, hash32);
+implement (Constant, tvalue, uint32_t, dblequ, hashdbl);

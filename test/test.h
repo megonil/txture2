@@ -27,7 +27,10 @@
 	TEST (lexer_spaces, "lexer")                                          \
 	TEST (lexer_comments, "lexer")                                        \
 	TEST (lexer_id, "lexer")                                              \
-	TEST (lexer_keyword, "lexer")
+	TEST (lexer_keyword, "lexer")                                         \
+	TEST (lexer_binary, "lexer")                                          \
+	TEST (lexer_character, "lexer")                                       \
+	TEST (lexer_complex_numbers, "lexer")
 
 #define TABLE                                                             \
 	TEST (Table_init_free, "table")                                       \
@@ -41,11 +44,19 @@
 	TEST (chunk_constant, "chunk")                                        \
 	TEST (chunk_expanded, "chunk")
 
+#define PARSER                                                            \
+	TEST (parser, "parser")                                               \
+	TEST (parser_number, "parser")                                        \
+	TEST (parser_simple_expr, "parser")                                   \
+	TEST (parser_more_complex_expr, "parser")                             \
+	TEST (parser_complex_expr, "parser")
+
 #define TESTS                                                             \
 	ARRAY                                                                 \
-	LEXER                                                                 \
 	TABLE                                                                 \
-	CHUNK
+	CHUNK                                                                 \
+	LEXER                                                                 \
+	PARSER
 
 #define testname(Name) test_##Name
 #define testfn(Name) void testname (Name) (void)
@@ -53,5 +64,7 @@
 #define TEST(Name, Group) testfn (Name);
 TESTS
 #undef TEST
+
+#define t(f) void testname (f) (void)
 
 #endif // !TXTURE_TEST_H

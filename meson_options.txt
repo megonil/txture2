@@ -1,0 +1,1 @@
+option('txture2_debug', type: 'boolean', value: false)

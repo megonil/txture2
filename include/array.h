@@ -37,11 +37,6 @@ typedef struct {
 #define foreach(arr, name) for (size_t name = 0; name < len (arr); ++name)
 
 #define string() array (char)
-#define string_clear(arr)                                                 \
-	do {                                                                  \
-		arr[0]	  = '\0';                                                 \
-		len (arr) = 0;                                                    \
-	} while (0)
 
 /// Init Array
 void*
@@ -54,7 +49,12 @@ array_resize (void* array, size_t n);
 void
 array_free (void* array);
 
+/// Invoke print function on all elements
 void
 array_print (void* array, PrintFunction fn);
+
+/// Set all bytes of array to 0
+void
+array_clear (void* array);
 
 #endif

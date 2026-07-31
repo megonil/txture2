@@ -14,7 +14,7 @@ void
 chunk_init (Chunk* chunk)
 {
 	chunk->code		 = array (opcode);
-	chunk->constants = array (value);
+	chunk->constants = array (tvalue);
 }
 
 inline void
@@ -34,19 +34,24 @@ emitbytes (Chunk* chunk, ...)
 	va_end (bytes);
 }
 
+void
+raw_constant (Chunk* chunk, size_t index)
+{
+	if (index > UINT8_MAX) {
+		to_u24 (index);
+		bytes (chunk, Expand, Const, high, mid, low);
+	} else {
+		bytes (chunk, Const, index);
+	}
+}
+
 size_t
-constant (Chunk* chunk, value v)
+constant (Chunk* chunk, tvalue v)
 {
 	push (chunk->constants, v);
 
 	size_t idx = len (chunk->constants) - 1;
-
-	if (idx > UINT8_MAX) {
-		to_u24 (idx);
-		bytes (chunk, Expand, Const, high, mid, low);
-	} else {
-		bytes (chunk, Const, idx);
-	}
+	raw_constant (chunk, idx);
 
 	return idx;
 }
@@ -75,15 +80,15 @@ disassemble_const (Chunk* chunk, opcode* code, int expanded)
 		index = *code++;
 	}
 
-	value v = chunk->constants[index];
+	tvalue v = chunk->constants[index];
 
 	println ("%s const %u (%g)", additional_tag, index, v);
 
 	return code;
 }
 
-#define B(Variant, Ch, Str)                                               \
-	case Variant: printf (Str " (%c)", Ch); break;
+#define B(Variant, Ch, Str, Prec)                                         \
+	case Variant: println (" " Str " (%c)", Ch); break;
 
 static opcode*
 disassemble_binary (Chunk* chunk, opcode* code)
@@ -96,9 +101,25 @@ disassemble_binary (Chunk* chunk, opcode* code)
 	return code;
 }
 
-#undef B
+#define U(Variant, Ch, Str)                                               \
+	case Variant: println (" " Str " (%c)", Ch); break;
 
-#define B(Variant, Ch, Str) case Variant:
+static opcode*
+disassemble_unary (Chunk* chunk, opcode* code)
+{
+	switch (*code++) {
+		UNARY_INSTRUCTIONS;
+	default: __builtin_unreachable ();
+	}
+
+	return code;
+}
+
+#undef B
+#undef U
+
+#define B(Variant, Ch, Str, Prec) case Variant:
+#define U(Variant, Ch, Str) case Variant:
 
 void
 disassemble (Chunk* chunk)
@@ -116,6 +137,9 @@ disassemble (Chunk* chunk)
 			code	 = disassemble_const (chunk, code, expanded);
 			break;
 
+		UNARY_INSTRUCTIONS
+			code = disassemble_unary(chunk, code); break;
+
 		BINARY_INSTRUCTIONS
 			code = disassemble_binary (chunk, code);
 			break;
@@ -127,3 +151,4 @@ disassemble (Chunk* chunk)
 }
 
 #undef B
+#undef U

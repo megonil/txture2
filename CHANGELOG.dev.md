@@ -1,3 +1,8 @@
+## `2.0.9` Changelog
+
+- parsing the most basics expressions
+- fixed multiple bugs in chunk disassembler, lexer and array
+
 ## `2.0.8` Changelog
 
 - chunk

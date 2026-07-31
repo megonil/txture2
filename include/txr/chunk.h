@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 typedef struct {
-	value*	constants;
+	tvalue* constants;
 	opcode* code;
 } Chunk;
 
@@ -23,8 +23,11 @@ byte (Chunk* chunk, uint8_t byte);
 void
 emitbytes (Chunk* chunk, ...);
 
+void
+raw_constant (Chunk* chunk, size_t index);
+
 size_t
-constant (Chunk* chunk, value v);
+constant (Chunk* chunk, tvalue v);
 
 void
 disassemble (Chunk* chunk);
