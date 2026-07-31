@@ -1,11 +1,11 @@
 #include "array.h"
 
+#include "test.h"
 #include "unity.h"
 
 #include <string.h>
 
-void
-test_array_init (void)
+t (array_init)
 {
 	int* arr = array (int);
 
@@ -17,8 +17,7 @@ test_array_init (void)
 	array_free (arr);
 }
 
-void
-test_array_push_one (void)
+t (array_push_one)
 {
 	int* arr = array (int);
 
@@ -30,8 +29,7 @@ test_array_push_one (void)
 	array_free (arr);
 }
 
-void
-test_array_push_many (void)
+t (array_push_many)
 {
 	int* arr = array (int);
 
@@ -44,8 +42,7 @@ test_array_push_many (void)
 	array_free (arr);
 }
 
-void
-test_array_grow (void)
+t (array_grow)
 {
 	int* arr = arrayc (int, 2);
 
@@ -61,8 +58,7 @@ test_array_grow (void)
 	array_free (arr);
 }
 
-void
-test_array_pop (void)
+t (array_pop)
 {
 	int* arr = array (int);
 
@@ -87,8 +83,7 @@ typedef struct {
 	int y;
 } Point;
 
-void
-test_array_struct (void)
+t (array_struct)
 {
 	Point* arr = array (Point);
 
@@ -104,8 +99,7 @@ test_array_struct (void)
 	array_free (arr);
 }
 
-void
-test_array_char (void)
+t (array_char)
 {
 	char* str = string ();
 
@@ -118,8 +112,7 @@ test_array_char (void)
 	array_free (str);
 }
 
-void
-test_string_clear (void)
+t (string_clear)
 {
 	char* str = string ();
 
@@ -135,8 +128,7 @@ test_string_clear (void)
 	array_free (str);
 }
 
-void
-test_array_empty (void)
+t (array_empty)
 {
 	int* arr = array (int);
 
@@ -149,8 +141,7 @@ test_array_empty (void)
 	array_free (arr);
 }
 
-void
-test_array_large (void)
+t (array_large)
 {
 	int* arr = array (int);
 

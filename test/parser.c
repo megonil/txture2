@@ -130,3 +130,18 @@ t (parser_complex_expr)
 
 	epi ()
 }
+
+t (parser_pow)
+{
+	pro ("2 ^ (3 - 6) * 10");
+	_parse ();
+
+	assert_bytecode (
+		Const, 0, Const, 1, Const, 2, Sub, Pow, Const, 3, Pow);
+	assert_constant (2, 0);
+	assert_constant (3, 1);
+	assert_constant (6, 2);
+	assert_constant (10, 3);
+
+	epi ();
+}

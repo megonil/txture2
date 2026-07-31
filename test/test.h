@@ -33,10 +33,10 @@
 	TEST (lexer_complex_numbers, "lexer")
 
 #define TABLE                                                             \
-	TEST (Table_init_free, "table")                                       \
-	TEST (Table_insert_get_update_remove, "table")                        \
-	TEST (StringTable, "table")                                           \
-	TEST (NumTable, "table")
+	TEST (table, "table")                                                 \
+	TEST (table_all, "table")                                             \
+	TEST (string_table, "table")                                          \
+	TEST (num_table, "table")
 
 #define CHUNK                                                             \
 	TEST (chunk, "chunk")                                                 \
@@ -49,7 +49,8 @@
 	TEST (parser_number, "parser")                                        \
 	TEST (parser_simple_expr, "parser")                                   \
 	TEST (parser_more_complex_expr, "parser")                             \
-	TEST (parser_complex_expr, "parser")
+	TEST (parser_complex_expr, "parser")                                  \
+	TEST (parser_pow, "parser")
 
 #define TESTS                                                             \
 	ARRAY                                                                 \

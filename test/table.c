@@ -2,8 +2,7 @@
 
 #include "test.h"
 
-void
-test_Table_init_free (void)
+t (table)
 {
 	Table table;
 	TableInit (&table);
@@ -19,8 +18,7 @@ test_Table_init_free (void)
 	TEST_ASSERT_EQUAL_UINT64 (0, (unsigned long long) table.size);
 }
 
-void
-test_Table_insert_get_update_remove (void)
+t (table_all)
 {
 	Table table;
 	TableInit (&table);
@@ -49,8 +47,7 @@ test_Table_insert_get_update_remove (void)
 	TableFree (&table);
 }
 
-void
-test_StringTable (void)
+t (string_table)
 {
 	StringTable table;
 	StringTableInit (&table);
@@ -85,8 +82,7 @@ test_StringTable (void)
 	StringTableFree (&table);
 }
 
-void
-test_NumTable (void)
+t (num_table)
 {
 	NumTable table;
 	NumTableInit (&table);

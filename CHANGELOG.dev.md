@@ -1,3 +1,8 @@
+## `2.0.10` Changelog
+
+- modernise old tests
+- pow expressions
+
 ## `2.0.9` Changelog
 
 - parsing the most basics expressions

@@ -62,8 +62,7 @@ check_error ()
 	good ();                                                              \
 	expectT ((TokenType) c)
 
-void
-test_lexer_character ()
+t (lexer_character)
 {
 	prelude ("() * = + - / $");
 	char ('(');
@@ -79,8 +78,7 @@ test_lexer_character ()
 	end ();
 }
 
-void
-test_lexer_integer ()
+t (lexer_integer)
 {
 	prelude ("123");
 	expect_lit (123.0f);
@@ -89,8 +87,7 @@ test_lexer_integer ()
 	end ();
 }
 
-void
-test_lexer_float ()
+t (lexer_float)
 {
 	prelude ("123.53189");
 	expect_lit (123.53189f);
@@ -99,8 +96,7 @@ test_lexer_float ()
 	end ();
 }
 
-void
-test_lexer_exponential ()
+t (lexer_exponential)
 {
 	prelude ("123e-10 123e+10");
 	expect_lit (123e-10f);
@@ -110,8 +106,7 @@ test_lexer_exponential ()
 	end ();
 }
 
-void
-test_lexer_signed ()
+t (lexer_signed)
 {
 	prelude ("-150.0 -150e-10 -00000.0 +00000.0");
 	expect_lit (-150.0f);
@@ -123,8 +118,7 @@ test_lexer_signed ()
 	end ();
 }
 
-void
-test_lexer_eof ()
+t (lexer_eof)
 {
 	prelude ("");
 
@@ -132,8 +126,7 @@ test_lexer_eof ()
 	end ()
 }
 
-void
-test_lexer_spaces ()
+t (lexer_spaces)
 {
 	prelude ("      \t\n\r");
 
@@ -141,8 +134,7 @@ test_lexer_spaces ()
 	end ()
 }
 
-void
-test_lexer_comments ()
+t (lexer_comments)
 {
 	prelude ("# This is a comment!\n 123 \n # This is also a comment!");
 	expect_lit (123.0f);
@@ -152,8 +144,7 @@ test_lexer_comments ()
 	end ();
 }
 
-void
-test_lexer_keyword ()
+t (lexer_keyword)
 {
 	prelude ("alias");
 	expect (TTAlias);
@@ -162,8 +153,7 @@ test_lexer_keyword ()
 	end ();
 }
 
-void
-test_lexer_id ()
+t (lexer_id)
 {
 	prelude ("abcd _someide234ntifier");
 	id ("abcd");
@@ -173,8 +163,7 @@ test_lexer_id ()
 	end ();
 }
 
-void
-test_lexer_binary ()
+t (lexer_binary)
 {
 	prelude ("123.5 + 5690e-10");
 	expect_lit (123.5f);
@@ -185,8 +174,7 @@ test_lexer_binary ()
 	end ();
 }
 
-void
-test_lexer_complex_numbers ()
+t (lexer_complex_numbers)
 {
 	prelude ("-1234.56 + 12345 * 500");
 	expect_lit (-1234.56f);
