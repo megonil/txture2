@@ -13,7 +13,8 @@
 #include <stdlib.h>
 
 #define parsef(name) static void name (Parser* parser)
-parsef (binary);
+parsef (binary_r);
+parsef (binary_l);
 parsef (number);
 parsef (unary);
 parsef (grouping);
@@ -51,7 +52,7 @@ typedef struct {
 	pr ()                                                                 \
 	{ 0, f, p }
 #define inf(f) infp (f, PNone)
-#define binar(p) infp (binary, p)
+#define binar(p) infp (binary_r, p)
 #define unar() prefp (unary, PUnary)
 #define all(i, f, p)                                                      \
 	pr ()                                                                 \
@@ -63,7 +64,7 @@ typedef struct {
 static ParseRule rules[TTEnd];
 
 #define B(Variant, Ch, Str, Prec) rules[Ch] = binar (Prec);
-#define U(Variant, Ch, Str) rules[Ch] = unar ();
+#define U(Variant, Ch, Str, Op) rules[Ch] = unar ();
 
 #define custom(Ch, rule) rules[Ch] = rule
 
@@ -75,7 +76,8 @@ init_parsing_rules ()
 	BINARY_INSTRUCTIONS
 	UNARY_INSTRUCTIONS
 
-	custom ('-', all (unary, binary, PTerm));
+	custom ('-', all (unary, binary_r, PTerm));
+	custom ('^', infp (binary_l, PPow));
 	custom ('(', pref (grouping));
 	custom (TTNumber, pref (number));
 }
@@ -241,7 +243,8 @@ prec (Parser* parser, Precedence prec)
 
 	pref (parser);
 
-	while (prec < get_rule (curr)->prec && get_rule (curr)->prec > PNone) {
+	while (prec <= get_rule (curr)->prec
+		   && get_rule (curr)->prec > PNone) {
 		next ();
 		ParseFn inf = get_rule (prev)->infix;
 		inf (parser);
@@ -252,7 +255,7 @@ static void
 expression (Parser* parser)
 { prec (parser, PNone); }
 
-#define U(Variant, Ch, Str)                                               \
+#define U(Variant, Ch, Str, Op)                                           \
 	case Ch: emit (parser, Variant); break;
 
 static void
@@ -275,18 +278,23 @@ unary (Parser* parser)
 	case Ch: emit (parser, Variant); break;
 
 static void
-binary (Parser* parser)
+binary_impl (Parser* parser, Precedence next, TokenType op)
 {
-	TokenType  op	= prev;
-	ParseRule* rule = get_rule (op);
-	debug ("Binary op: %s, prec: %d", tok_to_string (op), rule->prec);
-	prec (parser, rule->prec + 1);
+	prec (parser, next);
 
 	switch ((uint8_t) op) {
 		BINARY_INSTRUCTIONS;
 	default: __builtin_unreachable ();
 	}
 }
+
+static inline void
+binary_r (Parser* parser)
+{ binary_impl (parser, get_rule (prev)->prec + 1, prev); }
+
+static inline void
+binary_l (Parser* parser)
+{ binary_impl (parser, get_rule (prev)->prec, prev); }
 
 #undef B
 

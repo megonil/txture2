@@ -145,3 +145,33 @@ t (parser_pow)
 
 	epi ();
 }
+
+t (parser_binary_additional)
+{
+	pro ("123 + 56879 * 247 + 2.5 ^ (2 + 5.3 * 1.15)");
+	_parse ();
+
+	assert_bytecode (
+		Const,
+		0,
+		Const,
+		1,
+		Const,
+		2,
+		Mul,
+		Add,
+		Const,
+		3,
+		Const,
+		4,
+		Const,
+		5,
+		Const,
+		6,
+		Mul,
+		Add,
+		Pow,
+		Add);
+
+	epi ();
+}

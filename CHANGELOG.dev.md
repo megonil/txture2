@@ -1,3 +1,8 @@
+## `2.0.11` Changelog
+
+- executing code
+- correct pow
+
 ## `2.0.10` Changelog
 
 - modernise old tests

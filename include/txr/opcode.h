@@ -11,11 +11,11 @@
 	B (Pow, '^', "pow", PPow)
 
 #define UNARY_INSTRUCTIONS                                                \
-	U (Neg, '-', "neg")                                                   \
-	U (Not, '!', "not")
+	U (Neg, '-', "neg", -)                                                \
+	U (Not, '!', "not", !)
 
 #define B(Variant, Ch, Str, Prec) Variant,
-#define U(Variant, Ch, Str) Variant,
+#define U(Variant, Ch, Str, Op) Variant,
 
 typedef enum : uint8_t {
 	Expand,

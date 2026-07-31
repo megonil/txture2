@@ -50,14 +50,24 @@
 	TEST (parser_simple_expr, "parser")                                   \
 	TEST (parser_more_complex_expr, "parser")                             \
 	TEST (parser_complex_expr, "parser")                                  \
-	TEST (parser_pow, "parser")
+	TEST (parser_pow, "parser")                                           \
+	TEST (parser_binary_additional, "parser")
+
+#define VMT                                                               \
+	TEST (vm, "vm")                                                       \
+	TEST (vm_binary, "vm")                                                \
+	TEST (vm_unary, "vm")                                                 \
+	TEST (vm_constant, "vm")                                              \
+	TEST (vm_calculator, "vm")                                            \
+	TEST (vm_correct_power, "vm")
 
 #define TESTS                                                             \
 	ARRAY                                                                 \
 	TABLE                                                                 \
 	CHUNK                                                                 \
 	LEXER                                                                 \
-	PARSER
+	PARSER                                                                \
+	VMT
 
 #define testname(Name) test_##Name
 #define testfn(Name) void testname (Name) (void)

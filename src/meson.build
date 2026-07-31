@@ -50,6 +50,7 @@ test_src = files(
 	'../test/main.c',
 	'../test/parser.c',
 	'../test/table.c',
+	'../test/vm.c',
 )
 test_exe = executable(
 	'txture2test',

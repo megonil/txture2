@@ -101,7 +101,7 @@ disassemble_binary (Chunk* chunk, opcode* code)
 	return code;
 }
 
-#define U(Variant, Ch, Str)                                               \
+#define U(Variant, Ch, Str, Op)                                           \
 	case Variant: println (" " Str " (%c)", Ch); break;
 
 static opcode*
@@ -119,7 +119,7 @@ disassemble_unary (Chunk* chunk, opcode* code)
 #undef U
 
 #define B(Variant, Ch, Str, Prec) case Variant:
-#define U(Variant, Ch, Str) case Variant:
+#define U(Variant, Ch, Str, Op) case Variant:
 
 void
 disassemble (Chunk* chunk)
