@@ -27,6 +27,9 @@ typedef uint64_t pxpos;
 #define debug(fmt, ...) ((void) 0)
 #endif
 
+double
+parse_double (const char* b, int* ok);
+
 float
 parse_float (const char* b, int* result);
 

@@ -9,10 +9,11 @@
 typedef struct {
 	Lexer lexer;
 
-	VariableTable vars;
-	ConstantTable constants;
+	ConstantTable	 constants;
+	VariableSetTable var_set;
 
 	const char* sourcename;
+	char*		prev_buffer;
 	Chunk*		chunk;
 
 	TokenType current, previous;

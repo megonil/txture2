@@ -34,16 +34,16 @@ murmur (const char* value)
 	}
 
 	switch (len & 7u) {
-	case 7: h ^= (uint64_t) p[6] << 48ul;
-	case 6: h ^= (uint64_t) p[5] << 40ul;
-	case 5: h ^= (uint64_t) p[4] << 32ul;
-	case 4: h ^= (uint64_t) p[3] << 24ul;
-	case 3: h ^= (uint64_t) p[2] << 16ul;
-	case 2: h ^= (uint64_t) p[1] << 8ul;
-	case 1:
-		h ^= (uint64_t) p[0]; // fall through
-		h *= m;
-	default: break;
+		case 7: h ^= (uint64_t) p[6] << 48ul;
+		case 6: h ^= (uint64_t) p[5] << 40ul;
+		case 5: h ^= (uint64_t) p[4] << 32ul;
+		case 4: h ^= (uint64_t) p[3] << 24ul;
+		case 3: h ^= (uint64_t) p[2] << 16ul;
+		case 2: h ^= (uint64_t) p[1] << 8ul;
+		case 1:
+			h ^= (uint64_t) p[0]; // fall through
+			h *= m;
+		default: break;
 	}
 
 	h ^= h >> 47u;
@@ -221,6 +221,7 @@ dblequ (double x, double y)
 implementstr (, const char*, int, strequ, murmur);
 implementstr (String, const char*, const char*, strequ, murmur);
 implementstr (Keyword, const char*, TokenType, strequ, murmur);
+implementstr (VariableSet, const char*, size_t, strequ, murmur);
 implementstr (Variable, const char*, tvalue, strequ, murmur);
 
 implement (Num, int, int, intcmp, hash32);

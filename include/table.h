@@ -58,6 +58,7 @@ typedef uint32_t hash_t;
 define_tablestr (justtable, const char*, int);
 define_tablestr (String, const char*, const char*);
 define_tablestr (Keyword, const char*, TokenType);
+define_tablestr (VariableSet, const char*, size_t);
 define_tablestr (Variable, const char*, tvalue);
 
 #undef justtable

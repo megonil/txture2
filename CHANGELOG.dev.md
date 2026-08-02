@@ -1,3 +1,11 @@
+## `2.0.12` Changelog
+
+- variables set and load
+- negative virtual machine tests
+- use double instead of float in txr
+- new array functionality(copy, push_many)
+- virtual machine errors
+
 ## `2.0.11` Changelog
 
 - executing code

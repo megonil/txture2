@@ -1,5 +1,6 @@
 #include "txr/parser.h"
 
+#include "array.h"
 #include "table.h"
 #include "txr/chunk.h"
 #include "txr/opcode.h"
@@ -13,12 +14,14 @@
 #include <stdlib.h>
 
 #define parsef(name) static void name (Parser* parser)
+parsef (id_expr);
 parsef (binary_r);
 parsef (binary_l);
 parsef (number);
 parsef (unary);
 parsef (grouping);
 parsef (expression);
+parsef (statement);
 #undef parsef
 
 typedef enum {
@@ -80,6 +83,7 @@ init_parsing_rules ()
 	custom ('^', infp (binary_l, PPow));
 	custom ('(', pref (grouping));
 	custom (TTNumber, pref (number));
+	custom (TTId, pref (id_expr));
 }
 
 static ParseRule*
@@ -98,7 +102,7 @@ get_rule (TokenType t)
 #undef custom
 #undef all
 
-extern float	token_value;
+extern double	token_value;
 extern LexError lexerr;
 
 static void
@@ -121,6 +125,7 @@ move_tokens (Parser* parser)
 {
 	parser->previous = parser->current;
 	parser->current	 = lex (&parser->lexer);
+	copy (parser->prev_buffer, parser->lexer.buffer);
 	debug ("With %s", tok_to_string (parser->current));
 
 	print_lexerror (parser);
@@ -136,7 +141,7 @@ parser_free (Parser* parser)
 {
 	lexer_free (&parser->lexer);
 	ConstantTableFree (&parser->constants);
-	VariableTableFree (&parser->vars);
+	VariableSetTableFree (&parser->var_set);
 
 	free (parser);
 }
@@ -148,13 +153,14 @@ make_parser (const char* source, const char* sourcename, Chunk* ch)
 	// TODO: check for memory
 	if (sourcename != 0) parser->sourcename = sourcename;
 
-	parser->had_error  = 0;
-	parser->panic_mode = 0;
-	parser->chunk	   = ch;
+	parser->had_error	= 0;
+	parser->panic_mode	= 0;
+	parser->chunk		= ch;
+	parser->prev_buffer = string ();
 
 	lexer_init (&parser->lexer, source);
 	ConstantTableInit (&parser->constants);
-	VariableTableInit (&parser->vars);
+	VariableSetTableInit (&parser->var_set);
 
 	next (); // initialize tokens
 
@@ -268,7 +274,7 @@ unary (Parser* parser)
 
 	switch ((uint8_t) operator) {
 		UNARY_INSTRUCTIONS;
-	default: __builtin_unreachable ();
+		default: __builtin_unreachable ();
 	}
 }
 
@@ -284,7 +290,7 @@ binary_impl (Parser* parser, Precedence next, TokenType op)
 
 	switch ((uint8_t) op) {
 		BINARY_INSTRUCTIONS;
-	default: __builtin_unreachable ();
+		default: __builtin_unreachable ();
 	}
 }
 
@@ -298,11 +304,55 @@ binary_l (Parser* parser)
 
 #undef B
 
+static size_t
+push_name (Parser* parser)
+{
+	// assume that buffer wasn't overrided
+	char* s = strdup (parser->lexer.buffer);
+	push (parser->chunk->strings_to_free, s);
+	size_t idx = len (parser->chunk->strings_to_free) - 1;
+	VariableSetTableInsert (&parser->var_set, s, idx);
+
+	return idx;
+}
+
+static void
+id_expr (Parser* parser)
+{
+	const char* varname = parser->prev_buffer;
+
+	size_t idx;
+	if (!VariableSetTableContains (&parser->var_set, varname)) {
+		idx = push_name (parser);
+	} else {
+		idx = *VariableSetTableGet (&parser->var_set, varname);
+	}
+
+	if (curr == '=') {
+		next ();
+		expression (parser);
+		instruction_with_index (parser->chunk, Set, idx);
+	} else {
+		instruction_with_index (parser->chunk, Load, idx);
+	}
+}
+
+static void
+statement (Parser* parser)
+{
+	switch (curr) {
+		default: expression (parser);
+#ifndef TXTURE2_DEBUG
+			emit (parser, Pop);
+#endif
+	}
+}
+
 int
 parse (Parser* parser)
 {
 	debug ("Parser session ==>");
-	while (curr != TTEof) { expression (parser); }
+	while (curr != TTEof) statement (parser);
 
 #ifdef TXTURE2_DEBUG
 	disassemble (parser->chunk);

@@ -17,7 +17,7 @@ t (array_init)
 	array_free (arr);
 }
 
-t (array_push_one)
+t (array_push)
 {
 	int* arr = array (int);
 
@@ -29,7 +29,7 @@ t (array_push_one)
 	array_free (arr);
 }
 
-t (array_push_many)
+t (array_multiple_push)
 {
 	int* arr = array (int);
 
@@ -112,7 +112,7 @@ t (array_char)
 	array_free (str);
 }
 
-t (string_clear)
+t (array_clear)
 {
 	char* str = string ();
 
@@ -152,4 +152,23 @@ t (array_large)
 	for (int i = 0; i < 100000; i++) TEST_ASSERT_EQUAL_INT (i, arr[i]);
 
 	array_free (arr);
+}
+
+t (array_push_many)
+{
+	char* s = string ();
+	push_many_static (s, "Hello, World!");
+	TEST_ASSERT_EQUAL_STRING ("Hello, World!", s);
+}
+
+t (array_copy)
+{
+	char* s1 = string ();
+	push_many_static (s1, "hello");
+
+	char* s2 = string ();
+	push_many_static (s2, "world");
+
+	copy (s1, s2);
+	TEST_ASSERT_EQUAL_STRING ("world", s1);
 }

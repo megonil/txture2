@@ -42,7 +42,7 @@ executable(
 
 # Testing
 
-unity_dep = dependency('unity') # subproject
+unity_dep = dependency('unity', fallback: ['unity', 'unity_dep'])
 test_src = files(
 	'../test/array.c',
 	'../test/chunk.c',
@@ -58,6 +58,10 @@ test_exe = executable(
 	dependencies: unity_dep,
 	link_with: libs,
 	include_directories: incs,
+	c_args: [
+		'-DUNITY_INCLUDE_DOUBLE',
+		'-DUNITY_DOUBLE_PRECISION=1e-12',
+	],
 )
 
 test('txture2', test_exe)

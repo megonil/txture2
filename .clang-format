@@ -34,3 +34,4 @@ BreakBeforeBraces: Custom
 AllowShortBlocksOnASingleLine: Always
 BraceWrapping:
     AfterFunction: true
+IndentCaseLabels: true

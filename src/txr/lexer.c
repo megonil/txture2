@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 /// value of float literal
-float token_value = 0.0;
+double token_value = 0.0;
 
 /// error which happened during lexing
 LexError lexerr = LOK;
@@ -86,7 +86,7 @@ number (Lexer* lexer)
 	}
 
 	int ok;
-	token_value = parse_float (lexer->buffer, &ok);
+	token_value = parse_double (lexer->buffer, &ok);
 	if (!ok) seterr (WrongFloatLiteral);
 	if (isalpha (curr)) seterr (LetterTouchingNumber);
 

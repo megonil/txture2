@@ -10,6 +10,8 @@ typedef struct {
 	size_t cap;
 } ArrayHeader;
 
+#define static_len(arr) sizeof (arr) / sizeof (arr[0])
+
 #define CAP_INITIAL 8
 
 #define array(T) (T*) array_init (sizeof (T), CAP_INITIAL)
@@ -23,16 +25,25 @@ typedef struct {
 #define array_empty(arr) (len (arr) == 0)
 #define array_reserve(arr, items) arr = array_resize (arr, items)
 
-#define pushj(arr, val) arr[len (arr)++] = val
+#define unsafe_push(arr, val) arr[len (arr)++] = val
 #define push(arr, val)                                                    \
 	do {                                                                  \
 		array_reserve (arr, 1);                                           \
-		pushj (arr, val);                                                 \
+		unsafe_push (arr, val);                                           \
 	} while (0)
+
+#define copy(dest, src) dest = array_copy (dest, src, len (src))
+#define copy_static(dest, src)                                            \
+	dest = array_copy (dest, src, static_len (src))
+
+#define push_many(dest, src) dest = array_push_many (dest, src, len (src))
+#define push_many_static(dest, src)                                       \
+	dest = array_push_many (dest, src, static_len (src))
+
+#define pop(arr) arr[--len (arr)]
 
 #define array_inc(arr) len (arr)++
 
-#define pop(arr) arr[--len (arr)]
 #define last(arr) arr[len (arr) - 1]
 #define foreach(arr, name) for (size_t name = 0; name < len (arr); ++name)
 
@@ -56,5 +67,13 @@ array_print (void* array, PrintFunction fn);
 /// Set all bytes of array to 0
 void
 array_clear (void* array);
+
+/// Append n elements from src to dest
+void*
+array_push_many (void* dest, const void* src, size_t n);
+
+/// Copy n elementes from src to dest
+void*
+array_copy (void* dest, const void* src, size_t n);
 
 #endif

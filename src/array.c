@@ -66,3 +66,31 @@ array_clear (void* array)
 	memset (array, 0, len (array) * isize (array));
 	len (array) = 0;
 }
+
+static void*
+arrcpy (void* dest, const void* src, size_t n, size_t from)
+{
+	if (n > SIZE_MAX - from) return 0;
+
+	size_t end		  = from + n;
+	size_t l		  = len (dest);
+	size_t new_length = l;
+
+	if (end > l) {
+		dest = array_resize (dest, end - l);
+		new_length += end - l;
+	}
+
+	memmove ((char*) dest + from * isize (dest), src, n * isize (dest));
+	len (dest) = new_length;
+
+	return dest;
+}
+
+inline void*
+array_copy (void* dest, const void* src, size_t n)
+{ return arrcpy (dest, src, n, 0); }
+
+inline void*
+array_push_many (void* dest, const void* src, size_t n)
+{ return arrcpy (dest, src, n, len (dest)); }

@@ -175,3 +175,23 @@ t (parser_binary_additional)
 
 	epi ();
 }
+
+t (parser_variable_set)
+{
+	pro ("abcdef = 1238 + 150.56");
+	_parse ();
+
+	assert_bytecode (Const, 0, Const, 1, Add, Set, 0);
+
+	epi ();
+}
+
+t (parser_variable_get)
+{
+	pro ("abcdef = 1238 + 150.56\n abcdef");
+	_parse ();
+
+	assert_bytecode (Const, 0, Const, 1, Add, Set, 0, Load, 0);
+
+	epi ();
+}
