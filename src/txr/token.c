@@ -10,7 +10,7 @@ tok_to_string (TokenType t)
 	} else if (t < TTStart) {
 		snprintf (s, 32, "\\%d", t);
 	} else {
-		assert (t < TTEnd && t > TTStart);
+		assert (t < TTEndTokens && t > TTStart);
 		return toks_strs[t - TTError];
 	}
 

@@ -14,8 +14,10 @@ typedef uint64_t pxpos;
 #define println(fmt, ...) fprintln (stdout, fmt, ##__VA_ARGS__)
 
 #define error(fmt, ...)                                                   \
-	eprintln ("error: " fmt, ##__VA_ARGS__);                              \
-	exit (1)
+	do {                                                                  \
+		eprintln ("error: " fmt, ##__VA_ARGS__);                          \
+		exit (1);                                                         \
+	} while (0)
 
 #define note(fmt, ...) fprintln (stderr, "note: " fmt, ##__VA_ARGS__)
 

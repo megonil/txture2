@@ -1,6 +1,8 @@
-# You can define your own functions
+# You can define your own functions*
+# * - under the hood they aren't functions,
+# just glorified macros
 
-add(x, y) = x + y
+fn add(x, y) = x + y end
 
 R = add(20, 70) # 90
 

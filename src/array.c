@@ -16,7 +16,7 @@ array_init (size_t itemsize, size_t capacity)
 
 	ArrayHeader* header = calloc (1, size);
 
-	if (!header) { error ("unable to allocate header"); }
+	if (!header) error ("unable to allocate header");
 
 	header->item_size = itemsize;
 	header->cap		  = capacity;
@@ -37,7 +37,7 @@ array_resize (void* array, size_t n)
 			arrayh (array),
 			sizeof (ArrayHeader) + new_capacity * isize (array));
 
-		if (!h) { error ("unable to reallocate header"); }
+		if (!h) error ("unable to reallocate header");
 
 		h->cap = new_capacity;
 		return h + 1;

@@ -3,6 +3,7 @@
 #include "array.h"
 #include "table.h"
 #include "txr/chunk.h"
+#include "txr/lexer.h"
 #include "txr/opcode.h"
 #include "txr/token.h"
 #include "utils.h"
@@ -64,7 +65,7 @@ typedef struct {
 	pr ()                                                                 \
 	{ 0, 0, PNone }
 
-static ParseRule rules[TTEnd];
+static ParseRule rules[TTEndTokens];
 
 #define B(Variant, Ch, Str, Prec) rules[Ch] = binar (Prec);
 #define U(Variant, Ch, Str, Op) rules[Ch] = unar ();
@@ -74,7 +75,7 @@ static ParseRule rules[TTEnd];
 static void
 init_parsing_rules ()
 {
-	for (size_t i = 0; i < TTEnd; ++i) rules[i] = empty ();
+	for (size_t i = 0; i < TTEndTokens; ++i) rules[i] = empty ();
 
 	BINARY_INSTRUCTIONS
 	UNARY_INSTRUCTIONS
@@ -124,7 +125,7 @@ static void
 move_tokens (Parser* parser)
 {
 	parser->previous = parser->current;
-	parser->current	 = lex (&parser->lexer);
+	parser->current	 = preprocess_lex (&parser->lexer);
 	copy (parser->prev_buffer, parser->lexer.buffer);
 	debug ("With %s", tok_to_string (parser->current));
 
@@ -142,6 +143,7 @@ parser_free (Parser* parser)
 	lexer_free (&parser->lexer);
 	ConstantTableFree (&parser->constants);
 	VariableSetTableFree (&parser->var_set);
+	array_free (parser->prev_buffer);
 
 	free (parser);
 }
@@ -150,7 +152,10 @@ Parser*
 make_parser (const char* source, const char* sourcename, Chunk* ch)
 {
 	Parser* parser = malloc (sizeof (Parser));
-	// TODO: check for memory
+	if (!parser) {
+		perror ("cannot allocate parser");
+		exit (1);
+	}
 	if (sourcename != 0) parser->sourcename = sourcename;
 
 	parser->had_error	= 0;

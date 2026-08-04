@@ -10,7 +10,10 @@
 	P (TTId, "identificator")                                             \
 	P (TTNumber, "number")
 
-#define KEYWORDS K (Alias, "alias")
+#define KEYWORDS                                                          \
+	K (Alias, "alias")                                                    \
+	K (Fn, "fn")                                                          \
+	K (End, "end")
 
 #define K(Variant, Str) TT##Variant,
 #define P(Variant, Str) Variant,
@@ -19,7 +22,7 @@ typedef enum {
 	TTStart = UCHAR_MAX + 1,
 	TTError,
 	KEYWORDS PRINTABLE_TOKENS TTEof,
-	TTEnd,
+	TTEndTokens,
 } TokenType;
 
 #undef P

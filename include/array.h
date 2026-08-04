@@ -32,13 +32,14 @@ typedef struct {
 		unsafe_push (arr, val);                                           \
 	} while (0)
 
-#define copy(dest, src) dest = array_copy (dest, src, len (src))
-#define copy_static(dest, src)                                            \
-	dest = array_copy (dest, src, static_len (src))
+#define ncopy(dest, src, n) dest = array_copy (dest, src, n)
+#define copy(dest, src) ncopy (dest, src, len (src))
+#define copy_static(dest, src) ncopy (dest, src, static_len (src))
 
-#define push_many(dest, src) dest = array_push_many (dest, src, len (src))
+#define npush_many(dest, src, n) dest = array_push_many (dest, src, n)
+#define push_many(dest, src) npush_many (dest, src, len (src))
 #define push_many_static(dest, src)                                       \
-	dest = array_push_many (dest, src, static_len (src))
+	npush_many (dest, src, static_len (src))
 
 #define pop(arr) arr[--len (arr)]
 
@@ -56,6 +57,11 @@ array_init (size_t item_size, size_t capacity);
 /// Resize Array if needed so it can fit another n elements
 void*
 array_resize (void* array, size_t n);
+
+/// Resize array and copy data to contain another new n elements
+/// FROM front
+void*
+array_resize_front (void* array, size_t n);
 
 void
 array_free (void* array);

@@ -1,5 +1,6 @@
 #include "table.h"
 
+#include "txr/macro.h"
 #include "txr/token.h"
 
 #include <assert.h>
@@ -8,8 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TOMBSTONE_K(K) (K) 0
-#define TOMBSTONE_V(V) (V) 0
+#define TOMBSTONE_K(K) (K){0}
+#define TOMBSTONE_V(V) (V){0}
 
 static hash_t
 murmur (const char* value)
@@ -92,7 +93,8 @@ dblequ (double x, double y)
 		for (;;) {                                                        \
 			Name##TableItem* place = dest + index;                        \
 			if (place->key == TOMBSTONE_K (K)) {                          \
-				if (place->value == TOMBSTONE_V (V)) {                    \
+				if (memcmp (&place->value, &TOMBSTONE_V (V), sizeof (V))  \
+					== 0) {                                               \
 					return tomb != 0 ? tomb : place;                      \
 				} else if (tomb == 0) {                                   \
 					tomb = place;                                         \
@@ -135,7 +137,11 @@ dblequ (double x, double y)
 		Name##TableItem* dest                                             \
 			= Name##probe (table, table->entries, key, table->cap);       \
 		int isnew = dest->key == TOMBSTONE_K (K);                         \
-		if (isnew && dest->value == TOMBSTONE_V (V)) { table->size++; }   \
+		if (isnew                                                         \
+			&& memcmp (&dest->value, &TOMBSTONE_V (V), sizeof (V))        \
+				   == 0) {                                                \
+			table->size++;                                                \
+		}                                                                 \
 		Name##TableAssign (dest, key, value, hashfn (key));               \
 		return isnew;                                                     \
 	}                                                                     \
@@ -223,6 +229,8 @@ implementstr (String, const char*, const char*, strequ, murmur);
 implementstr (Keyword, const char*, TokenType, strequ, murmur);
 implementstr (VariableSet, const char*, size_t, strequ, murmur);
 implementstr (Variable, const char*, tvalue, strequ, murmur);
+implementstr (Macro, char*, Macro, strequ, murmur);
+implementstr (Arg, char*, ExtendedToken*, strequ, murmur);
 
 implement (Num, int, int, intcmp, hash32);
 implement (Constant, tvalue, uint32_t, dblequ, hashdbl);

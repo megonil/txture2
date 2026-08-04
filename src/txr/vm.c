@@ -49,7 +49,11 @@ make_vm ()
 
 inline void
 vm_free (VM* vm)
-{ free (vm); }
+{
+	VariableTableFree (&vm->variables);
+	array_free (vm->stack);
+	free (vm);
+}
 
 #define index()                                                           \
 	uint32_t index;                                                       \

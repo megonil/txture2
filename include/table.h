@@ -5,6 +5,7 @@
 // linear probing
 // hashmap
 
+#include "txr/macro.h"
 #include "txr/token.h"
 #include "txr/value.h"
 
@@ -60,6 +61,8 @@ define_tablestr (String, const char*, const char*);
 define_tablestr (Keyword, const char*, TokenType);
 define_tablestr (VariableSet, const char*, size_t);
 define_tablestr (Variable, const char*, tvalue);
+define_tablestr (Macro, char*, Macro);
+define_tablestr (Arg, char*, ExtendedToken*);
 
 #undef justtable
 

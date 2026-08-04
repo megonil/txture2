@@ -12,6 +12,7 @@ extern double	token_value;
 	lexer_init (&l, source);                                              \
 	TokenType t
 
+#define prelex() t = preprocess_lex (&l)
 #define lex_one() t = lex (&l)
 
 void
@@ -181,6 +182,97 @@ t (lexer_complex_numbers)
 	expect_lit (12345);
 	expect ('*');
 	expect_lit (500);
+
+	eof ();
+	end ();
+}
+
+// Preprocessing tests
+
+#undef expect
+#undef expect_lit
+#undef fail
+#undef id
+
+#define expect(T)                                                         \
+	prelex ();                                                            \
+	expectT (T)
+
+#define good() expectE (LOK)
+#define expect_lit(F)                                                     \
+	prelex ();                                                            \
+	expectT (TTNumber);                                                   \
+	good ();                                                              \
+	expectF (F)
+
+#define fail(E)                                                           \
+	prelex ();                                                            \
+	TEST_ASSERT_EQUAL_INT (TTError, t);                                   \
+	expectE (E)
+
+#define id(s)                                                             \
+	prelex ();                                                            \
+	good ();                                                              \
+	expectT (TTId);                                                       \
+	TEST_ASSERT_EQUAL_STRING (s, l.buffer)
+
+t (lexer_preprocess_alias)
+{
+	prelude ("alias A 1230 X = A");
+	id ("X");
+	expect ('=');
+	expect_lit (1230.0);
+	eof ();
+
+	end ();
+}
+
+t (lexer_preprocess_macrofn)
+{
+	prelude ("fn macro() 123 end macro() 1258951251");
+	expect_lit (123.0);
+	expect_lit (1258951251.0);
+
+	eof ();
+	end ();
+}
+
+t (lexer_preprocess_macrofn_arguments)
+{
+	prelude ("fn add(x, y) x + y end add(5, 2)");
+	expect_lit (5.0);
+	expect ('+');
+	expect_lit (2.0);
+
+	eof ();
+	end ();
+}
+
+t (lexer_preprocess_macrofn_depth)
+{
+	prelude (
+		"alias CONSTANT 200.589\n fn constant_mul(X) X * CONSTANT end\n "
+		"constant_mul(50.0)");
+	expect_lit (50.0);
+	expect ('*');
+	expect_lit (200.589);
+
+	eof ();
+	end ();
+}
+
+t (lexer_preprocess_macrofn_arguments_depth)
+{
+	prelude ("fn add(x, y) x + y end add((5 + 8) * 10, 30)");
+	expect ('(');
+	expect_lit (5.0);
+	expect ('+');
+	expect_lit (8.0);
+	expect (')');
+	expect ('*');
+	expect_lit (10.0);
+	expect ('+');
+	expect_lit (30.0);
 
 	eof ();
 	end ();

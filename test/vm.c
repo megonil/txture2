@@ -17,7 +17,8 @@
 #define nofail(source)                                                    \
 	pro (source);                                                         \
 	exec ();                                                              \
-	TEST_ASSERT_EQUAL (VMOK, result.code.kind)
+	TEST_ASSERT_EQUAL (VMOK, result.code.kind);                           \
+	epi ()
 
 #define fail(source, err)                                                 \
 	pro (source);                                                         \
@@ -26,9 +27,9 @@
 	epi ()
 
 #define epi()                                                             \
-	chunk_free (&chunk);                                                  \
 	parser_free (parser);                                                 \
-	vm_free (vm)
+	vm_free (vm);                                                         \
+	chunk_free (&chunk)
 
 #define assert_stack_at(v, i)                                             \
 	TEST_ASSERT_EQUAL_DOUBLE (v, vm->stack[len (vm->stack) - 1 - i])

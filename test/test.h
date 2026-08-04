@@ -32,7 +32,12 @@
 	TEST (lexer_comments, "lexer")                                        \
 	TEST (lexer_character, "lexer")                                       \
 	TEST (lexer_exponential, "lexer")                                     \
-	TEST (lexer_complex_numbers, "lexer")
+	TEST (lexer_complex_numbers, "lexer")                                 \
+	TEST (lexer_preprocess_alias, "lexer")                                \
+	TEST (lexer_preprocess_macrofn, "lexer")                              \
+	TEST (lexer_preprocess_macrofn_depth, "lexer")                        \
+	TEST (lexer_preprocess_macrofn_arguments, "lexer")                    \
+	TEST (lexer_preprocess_macrofn_arguments_depth, "lexer")
 
 #define TABLE                                                             \
 	TEST (table, "table")                                                 \

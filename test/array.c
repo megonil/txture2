@@ -3,8 +3,6 @@
 #include "test.h"
 #include "unity.h"
 
-#include <string.h>
-
 t (array_init)
 {
 	int* arr = array (int);
@@ -66,18 +64,20 @@ t (array_pop)
 	push (arr, 20);
 	push (arr, 30);
 
-	TEST_ASSERT_EQUAL_INT (30, pop (arr));
+	int val1 = pop (arr);
+	TEST_ASSERT_EQUAL_INT (30, val1);
 	TEST_ASSERT_EQUAL_UINT (2, len (arr));
 
-	TEST_ASSERT_EQUAL_INT (20, pop (arr));
+	int val2 = pop (arr);
+	TEST_ASSERT_EQUAL_INT (20, val2);
 	TEST_ASSERT_EQUAL_UINT (1, len (arr));
 
-	TEST_ASSERT_EQUAL_INT (10, pop (arr));
+	int val3 = pop (arr);
+	TEST_ASSERT_EQUAL_INT (10, val3);
 	TEST_ASSERT_EQUAL_UINT (0, len (arr));
 
 	array_free (arr);
 }
-
 typedef struct {
 	int x;
 	int y;
@@ -159,6 +159,8 @@ t (array_push_many)
 	char* s = string ();
 	push_many_static (s, "Hello, World!");
 	TEST_ASSERT_EQUAL_STRING ("Hello, World!", s);
+
+	array_free (s);
 }
 
 t (array_copy)
@@ -171,4 +173,7 @@ t (array_copy)
 
 	copy (s1, s2);
 	TEST_ASSERT_EQUAL_STRING ("world", s1);
+
+	array_free (s1);
+	array_free (s2);
 }

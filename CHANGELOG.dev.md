@@ -1,3 +1,8 @@
+## `2.0.13` Changelog
+
+- preprocess lexing: macros and aliases
+- fix memory leaks
+
 ## `2.0.12` Changelog
 
 - variables set and load

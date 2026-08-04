@@ -18,6 +18,19 @@ chunk_init (Chunk* chunk)
 	chunk->strings_to_free = array (char*);
 }
 
+void
+chunk_free (Chunk* chunk)
+{
+	array_free (chunk->constants);
+	array_free (chunk->code);
+
+	foreach (chunk->strings_to_free, i) {
+		free (chunk->strings_to_free[i]);
+	}
+
+	array_free (chunk->strings_to_free);
+}
+
 inline void
 byte (Chunk* chunk, uint8_t b)
 { push (chunk->code, (opcode) b); }
@@ -71,19 +84,6 @@ constant (Chunk* chunk, tvalue v)
 	raw_constant (chunk, idx);
 
 	return idx;
-}
-
-void
-chunk_free (Chunk* chunk)
-{
-	array_free (chunk->constants);
-	array_free (chunk->code);
-
-	foreach (chunk->strings_to_free, i) {
-		free (chunk->strings_to_free[i]);
-	}
-
-	array_free (chunk->strings_to_free);
 }
 
 static size_t
