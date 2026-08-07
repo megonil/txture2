@@ -1,3 +1,8 @@
+## `2.0.15` Changelog
+
+- parallel generation
+- new builtin variable: F (frequency, passed from cli)
+
 ## `2.0.14` Changelog
 
 - generate images using txr script

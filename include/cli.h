@@ -13,7 +13,6 @@
 struct Settings {
 	ImageProps	  image_props;
 	const char*	  base_filename;
-	float		  simplex_freq;
 	GeneratorType gentype;
 };
 

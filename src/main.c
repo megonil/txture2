@@ -1,21 +1,17 @@
 #include "cli.h"
+#include "color.h"
 #include "formats/ppm.h"
+#include "globals.h"
 #include "image.h"
 #include "writer.h"
 
 #include <assert.h>
-#include <color.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-ColoringType coloring_type;
-
-double	osc_freq = 1.0f;
-int64_t seed;
 
 static char*
 concat_filename (const char* base, const char* extension)
@@ -56,5 +52,6 @@ main (int argc, char* argv[])
 
 	free (out_filename);
 	colors_free (colors, image.height);
+
 	return 0;
 }

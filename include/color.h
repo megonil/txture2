@@ -24,10 +24,26 @@ colors_free (Colors, uint height);
 void
 apply_to_color (Color*, Color);
 
-typedef Color (*forpixel) (pxpos, pxpos, ImageProps, void*);
+typedef struct {
+	ImageProps props;
+	void*	   gen_state;
+	void*	   thr_state;
+	Color*	   result;
+	pxpos	   x, y;
+} ForPixelArgs;
+
+typedef void (*forpixelfn) (void*);
+typedef void* (*prepare_threadfn) (void);
+typedef void (*clearfn) (void*);
+
+typedef struct {
+	forpixelfn		 f;
+	prepare_threadfn prep_thr;
+	clearfn			 clear_thr;
+} ForAllPixelsArgs;
 
 void
-colors_for (Colors c, ImageProps p, forpixel f, void* s);
+colors_for (Colors c, ImageProps p, ForAllPixelsArgs thr, void* s);
 
 /// Convert Float with value in [-1..1] to pix
 pix

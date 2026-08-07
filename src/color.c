@@ -2,6 +2,7 @@
 #include "utils.h"
 
 #include <color.h>
+#include <omp.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -39,12 +40,31 @@ colors_init (Colors* c, uint width, uint height)
 }
 
 void
-colors_for (Colors c, ImageProps p, forpixel f, void* s)
+colors_for (Colors c, ImageProps p, ForAllPixelsArgs thr, void* s)
 {
-	for (pxpos y = 0; y < p.height; ++y) {
-		for (pxpos x = 0; x < p.width; ++x) {
-			apply_to_color (&c[y][x], f (x, y, p, s));
+#pragma omp parallel
+	{
+		void* thread_state = 0;
+
+		if (thr.prep_thr) thread_state = thr.prep_thr ();
+
+#pragma omp for collapse(2)
+		for (pxpos y = 0; y < p.height; ++y) {
+			for (pxpos x = 0; x < p.width; ++x) {
+
+				ForPixelArgs args
+					= {.x		  = x,
+					   .y		  = y,
+					   .props	  = p,
+					   .gen_state = s,
+					   .result	  = &c[y][x],
+					   .thr_state = thread_state};
+
+				thr.f (&args);
+			}
 		}
+
+		if (thread_state) thr.clear_thr (thread_state);
 	}
 }
 

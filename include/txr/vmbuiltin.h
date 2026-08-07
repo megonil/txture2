@@ -13,10 +13,12 @@
 #define U_VARIABLE "U"
 #define V_VARIABLE "V"
 #define M_VARIABLE "M"
+#define F_VARIABLE "F"
 
 #define h() props->height
 #define w() props->width
 #define m() props->max_colors
+#define f() osc_freq
 
 #define EXTERNAL_BUILTIN_VARIABLES                                        \
 	EVAR (X_VARIABLE, x)                                                  \
@@ -25,7 +27,8 @@
 	EVAR (H_VARIABLE, h ())                                               \
 	EVAR (U_VARIABLE, x / (w () - 1))                                     \
 	EVAR (V_VARIABLE, y / (h () - 1))                                     \
-	EVAR (M_VARIABLE, m ())
+	EVAR (M_VARIABLE, m ())                                               \
+	EVAR (F_VARIABLE, f ())
 
 #define BUILTIN_VARIABLES                                                 \
 	VAR (R_VARIABLE, 0.0)                                                 \

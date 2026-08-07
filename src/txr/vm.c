@@ -13,6 +13,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+extern double osc_freq;
+
 #define none 0
 #define nonearr                                                           \
 	(const char*[])                                                       \
@@ -40,12 +42,29 @@ size_t _Thread_local line = 1;
 
 #define err(kind, args) return result (line, kind, args, default_last)
 
+#define VAR(Name, Default)                                                \
+	VariableTableInsert (&vm->variables, Name, Default);
+static void
+builtin_variables (VM* vm){BUILTIN_VARIABLES}
+#undef VAR
+
+#define EVAR(Name, Init) VariableTableInsert (&vm->variables, Name, Init);
+static void external_builtin_variables (
+	VM*				  vm,
+	tvalue			  x,
+	tvalue			  y,
+	const ImageProps* props)
+{ EXTERNAL_BUILTIN_VARIABLES; }
+#undef EVAR
+
 VM*
 make_vm ()
 {
 	VM* vm	  = malloc (sizeof (VM));
 	vm->stack = array (tvalue);
 	VariableTableInit (&vm->variables);
+
+	builtin_variables (vm);
 
 	return vm;
 }
@@ -179,21 +198,6 @@ value_Or (tvalue a, tvalue b)
 		break;                                                            \
 	}
 
-#define VAR(Name, Default)                                                \
-	VariableTableInsert (&vm->variables, Name, Default);
-static void
-builtin_variables (VM* vm){BUILTIN_VARIABLES}
-#undef VAR
-
-#define EVAR(Name, Init) VariableTableInsert (&vm->variables, Name, Init);
-static void external_builtin_variables (
-	VM*				  vm,
-	tvalue			  x,
-	tvalue			  y,
-	const ImageProps* props)
-{ EXTERNAL_BUILTIN_VARIABLES; }
-#undef EVAR
-
 VMResult
 execute (
 	VM*				  vm,
@@ -202,11 +206,8 @@ execute (
 	tvalue			  y,
 	const ImageProps* props)
 {
-	// avoid stucking with previous values
-	builtin_variables (vm);
+	len (vm->stack) = 0;
 	external_builtin_variables (vm, x, y, props);
-	VariableTableInsert (&vm->variables, X_VARIABLE, x);
-	VariableTableInsert (&vm->variables, Y_VARIABLE, y);
 
 	opcode* code = chunk->code;
 	opcode* end	 = chunk->code + len (chunk->code);

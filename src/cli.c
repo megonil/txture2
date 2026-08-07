@@ -1,9 +1,9 @@
 #include "cli.h"
 
+#include "globals.h"
 #include "utils.h"
 
 #include <cargs.h>
-#include <errno.h>
 #include <writer.h>
 
 static void
@@ -46,7 +46,7 @@ static const struct cag_option options[] = {
 	 .access_letters = "fF",
 	 .access_name	 = "freq",
 	 .value_name	 = "FLT",
-	 .description = "Specifies frequency to use with simplex generator"},
+	 .description	 = "Specifies frequency to use with generator"},
 };
 
 static float
@@ -65,7 +65,13 @@ parse_flt (const char* s)
 
 static uint
 parse_uint (const char* s)
-{ return (uint) parse (s, "integer"); }
+{
+	const float x = parse (s, "integer");
+	if (x < 0) error ("expected a positive number");
+	if (x - (int) x != 0.0) note ("ignoring fractional part");
+
+	return (uint) x;
+}
 
 static _Noreturn void
 usage (cag_option_context* ctx)
@@ -104,7 +110,7 @@ parse_args (struct Settings* out, int argc, char* argv[])
 		option_uint ('w', out->image_props.width);
 		option_uint ('h', out->image_props.height);
 		option_uint ('m', out->image_props.max_colors);
-		option_float ('f', out->simplex_freq);
+		option_float ('f', osc_freq);
 
 		case 's': out->base_filename = cag_option_get_value (&ctx); break;
 		case 'e': usage (&ctx); break;

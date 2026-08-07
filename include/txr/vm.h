@@ -2,6 +2,7 @@
 #define TXTURE2_TXR_VM_H
 
 #include "color.h"
+#include "globals.h"
 #include "image.h"
 #include "table.h"
 #include "txr/chunk.h"

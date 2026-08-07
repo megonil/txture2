@@ -107,13 +107,10 @@ fast_floor (OSNFLOAT x)
 static int
 allocate_perm (struct osn_context* ctx, int nperm, int ngrad)
 {
-	if (ctx->perm)
-		free (ctx->perm);
-	if (ctx->permGradIndex3D)
-		free (ctx->permGradIndex3D);
+	if (ctx->perm) free (ctx->perm);
+	if (ctx->permGradIndex3D) free (ctx->permGradIndex3D);
 	ctx->perm = (int16_t*) malloc (sizeof (*ctx->perm) * nperm);
-	if (!ctx->perm)
-		return -ENOMEM;
+	if (!ctx->perm) return -ENOMEM;
 	ctx->permGradIndex3D
 		= (int16_t*) malloc (sizeof (*ctx->permGradIndex3D) * ngrad);
 	if (!ctx->permGradIndex3D) {
@@ -139,8 +136,7 @@ simplex_seed (int64_t seed, struct osn_context** ctx)
 	int		 r;
 
 	*ctx = (struct osn_context*) malloc (sizeof (**ctx));
-	if (!(*ctx))
-		return -ENOMEM;
+	if (!(*ctx)) return -ENOMEM;
 	(*ctx)->perm			= NULL;
 	(*ctx)->permGradIndex3D = NULL;
 
@@ -161,8 +157,7 @@ simplex_seed (int64_t seed, struct osn_context** ctx)
 	for (i = 255; i >= 0; i--) {
 		seedU = seedU * 6364136223846793005ULL + 1442695040888963407ULL;
 		r	  = (int) ((seedU + 31) % (i + 1));
-		if (r < 0)
-			r += (i + 1);
+		if (r < 0) r += (i + 1);
 		perm[i] = source[r];
 		permGradIndex3D[i]
 			= (short) ((perm[i] % (ARRAYSIZE (gradients3D) / 3)) * 3);
@@ -174,8 +169,7 @@ simplex_seed (int64_t seed, struct osn_context** ctx)
 void
 simplex_free (struct osn_context* ctx)
 {
-	if (!ctx)
-		return;
+	if (!ctx) return;
 	if (ctx->perm) {
 		free (ctx->perm);
 		ctx->perm = NULL;
@@ -325,6 +319,4 @@ open_simplex_noise2 (const struct osn_context* ctx, OSNFLOAT x, OSNFLOAT y)
 
 float
 simplex_noise (struct osn_context* ctx, pxpos x, pxpos y, float freq)
-{
-	return open_simplex_noise2 (ctx, x * freq, y * freq);
-}
+{ return open_simplex_noise2 (ctx, x * freq, y * freq); }

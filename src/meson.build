@@ -6,6 +6,7 @@ endif
 incs = [include_directories('../include')]
 cc = meson.get_compiler('c')
 m_dep = cc.find_library('m') # math library, used by some modules
+openmp_dep = dependency('openmp', required: false)
 
 # Libraries
 subdir('cargs')
@@ -15,7 +16,7 @@ subdir('txr')
 
 utils_lib = static_library('utils', ['utils.c'], include_directories: incs)
 writer_lib = static_library('writer', ['writer.c'], include_directories: incs)
-color_lib = static_library('color', ['color.c'], include_directories: incs)
+color_lib = static_library('color', ['color.c'], include_directories: incs, dependencies: [openmp_dep])
 cli_lib = static_library('cli', ['cli.c'], include_directories: incs, link_with: cargs_lib)
 array_lib = static_library('array', ['array.c'], include_directories: incs)
 table_lib = static_library('table', ['table.c'], include_directories: incs)
@@ -32,9 +33,11 @@ libs = [
 	array_lib,
 ]
 
+src = files('globals.c')
+
 executable(
 	'txture2',
-	'main.c',
+	src + 'main.c',
 	link_with: libs,
 	install: true,
 	include_directories: incs,
@@ -54,7 +57,7 @@ test_src = files(
 )
 test_exe = executable(
 	'txture2test',
-	test_src,
+	src + test_src,
 	dependencies: unity_dep,
 	link_with: libs,
 	include_directories: incs,

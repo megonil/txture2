@@ -4,17 +4,17 @@
 #include "color.h"
 #include "image.h"
 
-#define OSCS O (simplex, simplex_prepare, simplexf, simplex_clear)
+#define OSCS O (simplex, simplex_prepare, 0, simplexf, simplex_clear, 0)
 
 typedef enum {
-#define O(Name, prep, osc, clear) Name,
+#define O(Name, prep, prep_thr, osc, clear, clear_thr) Name,
 	OSCS
 #undef O
 		TXRScript
 } GeneratorType;
 
 static const char* const genstrs[] = {
-#define O(Name, prep, osc, clr) #Name,
+#define O(Name, prep, prep_thr, osc, clr, clr_thr) #Name,
 	OSCS
 #undef O
 };
