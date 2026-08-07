@@ -1,18 +1,27 @@
 #include "txr/vm.h"
 
 #include "array.h"
+#include "cli.h"
 #include "test.h"
 #include "txr/chunk.h"
 #include "txr/parser.h"
 
+#define default_props                                                     \
+	(ImageProps)                                                          \
+	{                                                                     \
+		.height = default_height, .width = default_width,                 \
+		.max_colors = default_max_colors                                  \
+	}
+
 #define pro(source)                                                       \
-	Chunk chunk;                                                          \
-	chunk_init (&chunk);                                                  \
-	Parser* parser = make_parser (source, "source", &chunk);              \
+	Chunk*	chunk  = make_chunk ();                                       \
+	Parser* parser = make_parser (source, "source", chunk);               \
 	TEST_ASSERT_NOT_EQUAL (0, parse (parser));                            \
 	VM* vm = make_vm ()
 
-#define exec() VMResult result = execute (vm, &chunk)
+#define exec()                                                            \
+	VMResult result = execute (vm, chunk, 0, 0, &default_props);          \
+	vm_print (result);
 
 #define nofail(source)                                                    \
 	pro (source);                                                         \
@@ -29,7 +38,7 @@
 #define epi()                                                             \
 	parser_free (parser);                                                 \
 	vm_free (vm);                                                         \
-	chunk_free (&chunk)
+	chunk_free (chunk)
 
 #define assert_stack_at(v, i)                                             \
 	TEST_ASSERT_EQUAL_DOUBLE (v, vm->stack[len (vm->stack) - 1 - i])
@@ -73,7 +82,7 @@ t (vm_unary)
 t (vm_constant)
 {
 	pro ("");
-	for (size_t i = 0; i <= 257; ++i) constant (&chunk, i);
+	for (size_t i = 0; i <= 257; ++i) constant (chunk, i);
 	exec ();
 
 	assert_top (257.0);

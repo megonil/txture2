@@ -4,6 +4,12 @@
 #include "image.h"
 #include "writer.h"
 
+#define default_height 600
+#define default_width 600
+#define default_max_colors 255
+#define default_base_filename "out"
+#define default_gentype simplex
+
 struct Settings {
 	ImageProps	  image_props;
 	const char*	  base_filename;

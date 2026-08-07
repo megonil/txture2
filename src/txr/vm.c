@@ -1,9 +1,11 @@
 #include "txr/vm.h"
 
 #include "array.h"
+#include "image.h"
 #include "table.h"
 #include "txr/chunk.h"
 #include "txr/opcode.h"
+#include "txr/vmbuiltin.h"
 #include "utils.h"
 
 #include <assert.h>
@@ -25,7 +27,8 @@ size_t _Thread_local line = 1;
 	(VMResult)                                                            \
 	{                                                                     \
 		.code = {.line = eline, .kind = ekind},                           \
-		.args = {aargs[0], aargs[1], aargs[2], aargs[3]}, .last = llast   \
+		.args = {aargs[0], aargs[1], aargs[2], aargs[3]}, .last = llast,  \
+		.color = generated_color (vm)                                     \
 	}
 
 #define ok(v) return result (line, VMOK, nonearr, v)
@@ -53,6 +56,23 @@ vm_free (VM* vm)
 	VariableTableFree (&vm->variables);
 	array_free (vm->stack);
 	free (vm);
+}
+
+static Color
+generated_color (VM* vm)
+{
+	tvalue R = *VariableTableGet (&vm->variables, R_VARIABLE);
+	tvalue G = *VariableTableGet (&vm->variables, G_VARIABLE);
+	tvalue B = *VariableTableGet (&vm->variables, B_VARIABLE);
+
+	Color out;
+	// place to add directives
+
+	out.r = R;
+	out.g = G;
+	out.b = B;
+
+	return out;
 }
 
 #define index()                                                           \
@@ -89,6 +109,62 @@ static inline tvalue
 value_Pow (tvalue a, tvalue b)
 { return pow (a, b); }
 
+static inline tvalue
+value_BinAnd (tvalue a, tvalue b)
+{ return (tvalue) ((uint) a & (uint) b); }
+
+static inline tvalue
+value_BinOr (tvalue a, tvalue b)
+{ return (tvalue) ((uint) a | (uint) b); }
+
+static inline tvalue
+value_BinXor (tvalue a, tvalue b)
+{ return (tvalue) ((uint) a ^ (uint) b); }
+
+static inline tvalue
+value_Shl (tvalue a, tvalue b)
+{ return (tvalue) ((uint) a << (uint) b); }
+
+static inline tvalue
+value_Shr (tvalue a, tvalue b)
+{ return (tvalue) ((uint) a >> (uint) b); }
+
+static inline tvalue
+value_Ge (tvalue a, tvalue b)
+{ return a >= b; }
+
+static inline tvalue
+value_Gt (tvalue a, tvalue b)
+{ return a > b; }
+
+static inline tvalue
+value_Le (tvalue a, tvalue b)
+{ return a <= b; }
+
+static inline tvalue
+value_Lt (tvalue a, tvalue b)
+{ return a < b; }
+
+static inline tvalue
+value_Eq (tvalue a, tvalue b)
+{ return a == b; }
+
+static inline tvalue
+value_Neq (tvalue a, tvalue b)
+{ return a != b; }
+
+static inline tvalue
+value_Mod (tvalue a, tvalue b)
+{ return fmod (a, b); }
+
+static inline tvalue
+value_And (tvalue a, tvalue b)
+{ return a && b; }
+
+static inline tvalue
+value_Or (tvalue a, tvalue b)
+{ return a || b; }
+
 #define U(Variant, Ch, Str, Op)                                           \
 	case Variant: {                                                       \
 		spush (Op (spop ()));                                             \
@@ -103,13 +179,40 @@ value_Pow (tvalue a, tvalue b)
 		break;                                                            \
 	}
 
+#define VAR(Name, Default)                                                \
+	VariableTableInsert (&vm->variables, Name, Default);
+static void
+builtin_variables (VM* vm){BUILTIN_VARIABLES}
+#undef VAR
+
+#define EVAR(Name, Init) VariableTableInsert (&vm->variables, Name, Init);
+static void external_builtin_variables (
+	VM*				  vm,
+	tvalue			  x,
+	tvalue			  y,
+	const ImageProps* props)
+{ EXTERNAL_BUILTIN_VARIABLES; }
+#undef EVAR
+
 VMResult
-execute (VM* vm, const Chunk* chunk)
+execute (
+	VM*				  vm,
+	const Chunk*	  chunk,
+	tvalue			  x,
+	tvalue			  y,
+	const ImageProps* props)
 {
-	opcode* code	 = chunk->code;
+	// avoid stucking with previous values
+	builtin_variables (vm);
+	external_builtin_variables (vm, x, y, props);
+	VariableTableInsert (&vm->variables, X_VARIABLE, x);
+	VariableTableInsert (&vm->variables, Y_VARIABLE, y);
+
+	opcode* code = chunk->code;
+	opcode* end	 = chunk->code + len (chunk->code);
+
 	uint8_t expanded = 0;
-	for (;;) {
-		if (code > chunk->code + len (chunk->code)) break;
+	while (code < end) {
 		// clang-format off
 		switch (*code++) {
 			case Expand: expanded = 1; continue;
@@ -149,12 +252,8 @@ execute (VM* vm, const Chunk* chunk)
 		expanded = 0;
 	}
 
-	tvalue last = default_last;
-#ifndef TXTURE2_DEBUG
-	while (!array_empty (vm->stack)) last = spop ();
-#endif
-
-	ok (last);
+	tvalue t = default_last;
+	ok (t);
 }
 
 #undef B
@@ -170,10 +269,9 @@ execute (VM* vm, const Chunk* chunk)
 void
 vm_print (VMResult e)
 {
-	if (e.code.kind == VMOK) return;
 	switch (e.code.kind) {
-		VMERRORS
-		default: __builtin_unreachable ();
+		VMERRORS;
+		default: break;
 	}
 
 	eprintln (position, e.code.line);

@@ -10,6 +10,7 @@ typedef enum {
 #define O(Name, prep, osc, clear) Name,
 	OSCS
 #undef O
+		TXRScript
 } GeneratorType;
 
 static const char* const genstrs[] = {

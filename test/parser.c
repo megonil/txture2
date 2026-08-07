@@ -11,20 +11,19 @@
 #include <stdlib.h>
 
 #define pro(source)                                                       \
-	Chunk chunk;                                                          \
-	chunk_init (&chunk);                                                  \
-	Parser* p = make_parser (source, "source", &chunk);
+	Chunk*	chunk = make_chunk ();                                        \
+	Parser* p	  = make_parser (source, "source", chunk);
 
 #define _parse() parse (p)
 #define at(array, i) array[i]
-#define cat(i) at (chunk.code, i)
-#define kat(i) at (chunk.constants, i)
+#define cat(i) at (chunk->code, i)
+#define kat(i) at (chunk->constants, i)
 
 #define assert_constant(v, i) TEST_ASSERT_EQUAL_FLOAT (v, kat (i))
 
 #define epi()                                                             \
 	parser_free (p);                                                      \
-	chunk_free (&chunk);
+	chunk_free (chunk);
 
 void
 assert_bytecode_impl (
@@ -47,7 +46,7 @@ assert_bytecode_impl (
 
 #define assert_bytecode(...)                                              \
 	assert_bytecode_impl (                                                \
-		&chunk,                                                           \
+		chunk,                                                            \
 		(uint8_t[]){__VA_ARGS__},                                         \
 		sizeof ((uint8_t[]){__VA_ARGS__}) / sizeof (uint8_t))
 
@@ -188,7 +187,7 @@ t (parser_variable_set)
 
 t (parser_variable_get)
 {
-	pro ("abcdef = 1238 + 150.56\n abcdef");
+	pro ("abcdef = 1238 + 150.56 abcdef");
 	_parse ();
 
 	assert_bytecode (Const, 0, Const, 1, Add, Set, 0, Load, 0);

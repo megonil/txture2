@@ -190,6 +190,27 @@ isid_start (Lexer* lexer)
 	return (c == '_' && isnext_alnum ()) || isalpha (c);
 }
 
+#define M(Ch, Chs, Variant, Ch2, Ch2s)                                    \
+	case Ch:                                                              \
+		next ();                                                          \
+		if (curr == Ch2) {                                                \
+			next ();                                                      \
+			return TT##Variant;                                           \
+		}                                                                 \
+		return Ch;
+
+#define A(Ch, Chs, Left, Ls, Right, Rs, V1, V2)                           \
+	case Ch:                                                              \
+		next ();                                                          \
+		if (curr == Left) {                                               \
+			next ();                                                      \
+			return TT##V1;                                                \
+		} else if (curr == Right) {                                       \
+			next ();                                                      \
+			return TT##V2;                                                \
+		}                                                                 \
+		return Ch;
+
 TokenType
 lex (Lexer* lexer)
 {
@@ -204,9 +225,15 @@ lex (Lexer* lexer)
 	if (isnumber_start (lexer)) return number (lexer);
 	if (isid_start (lexer)) return keyword_or_identifier (lexer);
 
-	next ();
-	return (TokenType) c;
+	switch (c) {
+		MULTIPLECHARS;
+		AMBIGUOUS_MULTIPLECHARS;
+		default: next (); return (TokenType) c;
+	}
 }
+
+#undef A
+#undef M
 
 static void
 preconsume (Lexer* lexer, TokenType expected)

@@ -6,6 +6,7 @@
 #include "txr/lexer.h"
 #include "txr/opcode.h"
 #include "txr/token.h"
+#include "txr/vmbuiltin.h"
 #include "utils.h"
 
 #include <limits.h>
@@ -29,8 +30,12 @@ typedef enum {
 	PNone,
 	POr,
 	PAnd,
+	PBinOr,
+	PBinAnd,
+	PBinXor,
 	PEq,
 	PCmp,
+	PShift,
 	PTerm,
 	PFactor,
 	PPow,
@@ -125,8 +130,8 @@ static void
 move_tokens (Parser* parser)
 {
 	parser->previous = parser->current;
-	parser->current	 = preprocess_lex (&parser->lexer);
 	copy (parser->prev_buffer, parser->lexer.buffer);
+	parser->current = preprocess_lex (&parser->lexer);
 	debug ("With %s", tok_to_string (parser->current));
 
 	print_lexerror (parser);
@@ -148,6 +153,34 @@ parser_free (Parser* parser)
 	free (parser);
 }
 
+static size_t
+push_name (Parser* parser, const char* s)
+{
+	char* str = strdup (s);
+
+	push (parser->chunk->strings_to_free, str);
+	size_t idx = len (parser->chunk->strings_to_free) - 1;
+
+	VariableSetTableInsert (&parser->var_set, str, idx);
+	return idx;
+}
+
+#define VAR(Name, Default)                                                \
+	VariableSetTableInsert (                                              \
+		&parser->var_set, Name, push_name (parser, Name));
+
+#define EVAR(Name, Init) VAR (Name, 0)
+
+static void
+builtin_variables (Parser* parser)
+{
+	BUILTIN_VARIABLES;
+	EXTERNAL_BUILTIN_VARIABLES;
+}
+
+#undef VAR
+#undef EVAR
+
 Parser*
 make_parser (const char* source, const char* sourcename, Chunk* ch)
 {
@@ -166,6 +199,8 @@ make_parser (const char* source, const char* sourcename, Chunk* ch)
 	lexer_init (&parser->lexer, source);
 	ConstantTableInit (&parser->constants);
 	VariableSetTableInit (&parser->var_set);
+
+	builtin_variables (parser);
 
 	next (); // initialize tokens
 
@@ -279,7 +314,7 @@ unary (Parser* parser)
 
 	switch ((uint8_t) operator) {
 		UNARY_INSTRUCTIONS;
-		default: __builtin_unreachable ();
+		default: unreachable ();
 	}
 }
 
@@ -293,9 +328,9 @@ binary_impl (Parser* parser, Precedence next, TokenType op)
 {
 	prec (parser, next);
 
-	switch ((uint8_t) op) {
+	switch ((uint) op) {
 		BINARY_INSTRUCTIONS;
-		default: __builtin_unreachable ();
+		default: unreachable ();
 	}
 }
 
@@ -309,26 +344,19 @@ binary_l (Parser* parser)
 
 #undef B
 
-static size_t
-push_name (Parser* parser)
-{
-	// assume that buffer wasn't overrided
-	char* s = strdup (parser->lexer.buffer);
-	push (parser->chunk->strings_to_free, s);
-	size_t idx = len (parser->chunk->strings_to_free) - 1;
-	VariableSetTableInsert (&parser->var_set, s, idx);
-
-	return idx;
-}
-
 static void
 id_expr (Parser* parser)
 {
+	debug (
+		"id_expr: prevbuffer=%s, curr=%d, currbuffer=%s",
+		parser->prev_buffer,
+		curr,
+		parser->lexer.buffer);
 	const char* varname = parser->prev_buffer;
 
 	size_t idx;
 	if (!VariableSetTableContains (&parser->var_set, varname)) {
-		idx = push_name (parser);
+		idx = push_name (parser, varname);
 	} else {
 		idx = *VariableSetTableGet (&parser->var_set, varname);
 	}

@@ -5,6 +5,9 @@ build
 *.out
 *.tmp
 
+# generator input
+*.txr
+
 # generator output
 out.*
 *.ppm

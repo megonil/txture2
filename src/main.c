@@ -12,7 +12,9 @@
 #include <string.h>
 #include <time.h>
 
-float	simplex_freq = 1.0f;
+ColoringType coloring_type;
+
+double	osc_freq = 1.0f;
 int64_t seed;
 
 static char*

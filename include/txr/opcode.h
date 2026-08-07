@@ -8,7 +8,21 @@
 	B (Sub, '-', "sub", PTerm)                                            \
 	B (Mul, '*', "mul", PFactor)                                          \
 	B (Div, '/', "div", PFactor)                                          \
-	B (Pow, '^', "pow", PPow)
+	B (Mod, '%', "mod", PFactor)                                          \
+	B (Pow, '^', "pow", PPow)                                             \
+	B (BinAnd, '&', "binand", PBinAnd)                                    \
+	B (BinOr, '|', "binor", PBinOr)                                       \
+	B (BinXor, '$', "binxor", PBinXor)                                    \
+	B (Shl, TTShl, "shl", PShift)                                         \
+	B (Shr, TTShr, "shr", PShift)                                         \
+	B (Ge, TTGe, "ge", PCmp)                                              \
+	B (Gt, '>', "gt", PCmp)                                               \
+	B (Le, TTLe, "le", PCmp)                                              \
+	B (Lt, '<', "lt", PCmp)                                               \
+	B (Eq, TTEq, "eq", PCmp)                                              \
+	B (Neq, TTNEq, "neq", PEq)                                            \
+	B (And, TTAnd, "and", PAnd)                                           \
+	B (Or, TTOr, "or", POr)
 
 #define UNARY_INSTRUCTIONS                                                \
 	U (Neg, '-', "neg", -)                                                \

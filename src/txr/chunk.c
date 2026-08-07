@@ -2,6 +2,7 @@
 
 #include "array.h"
 #include "txr/opcode.h"
+#include "txr/token.h"
 #include "txr/value.h"
 #include "utils.h"
 
@@ -10,12 +11,16 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void
-chunk_init (Chunk* chunk)
+Chunk*
+make_chunk ()
 {
+	Chunk* chunk = malloc (sizeof (Chunk));
+
 	chunk->code			   = array (opcode);
 	chunk->constants	   = array (tvalue);
 	chunk->strings_to_free = array (char*);
+
+	return chunk;
 }
 
 void
@@ -29,6 +34,8 @@ chunk_free (Chunk* chunk)
 	}
 
 	array_free (chunk->strings_to_free);
+
+	free (chunk);
 }
 
 inline void
@@ -107,11 +114,11 @@ disassemble_const (Chunk* chunk, opcode* code, int expanded)
 {
 	code++;
 	size_t		index		   = get_index (&code, expanded);
-	const char* additional_tag = "";
+	const char* additional_tag = expanded ? "expanded " : "";
 
 	tvalue v = chunk->constants[index];
 
-	println ("%s const %zu (%g)", additional_tag, index, v);
+	println ("%sconst %zu (%g)", additional_tag, index, v);
 
 	return code;
 }
@@ -127,7 +134,7 @@ disassemble_setload (
 	size_t		index  = get_index (&code, expanded);
 	const char* string = chunk->strings_to_free[index];
 
-	println (" %s %zu (%s)", instruction_str, index, string);
+	println ("%s %zu (%s)", instruction_str, index, string);
 
 	return code;
 }
@@ -141,7 +148,7 @@ disassemble_set (Chunk* chunk, opcode* code, int expanded)
 { return disassemble_setload (chunk, code, expanded, "set"); }
 
 #define B(Variant, Ch, Str, Prec)                                         \
-	case Variant: println (" " Str " (%c)", Ch); break;
+	case Variant: println (Str " (%s)", tok_to_string (Ch)); break;
 
 static opcode*
 disassemble_binary (Chunk* chunk, opcode* code)
@@ -155,7 +162,7 @@ disassemble_binary (Chunk* chunk, opcode* code)
 }
 
 #define U(Variant, Ch, Str, Op)                                           \
-	case Variant: println (" " Str " (%c)", Ch); break;
+	case Variant: println (Str " (%c)", Ch); break;
 
 static opcode*
 disassemble_unary (Chunk* chunk, opcode* code)
@@ -182,7 +189,7 @@ disassemble (Chunk* chunk)
 
 	while (code < chunk->code + len (chunk->code)) {
 		// clang-format off
-		printf("%zu ", code - chunk->code);
+		printf("%-7zu ", code - chunk->code);
 
 		switch (*code) {
 			case Expand: expanded = 1; code++; println("expand"); continue;

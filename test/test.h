@@ -35,6 +35,8 @@
 	TEST (lexer_complex_numbers, "lexer")                                 \
 	TEST (lexer_preprocess_alias, "lexer")                                \
 	TEST (lexer_preprocess_macrofn, "lexer")                              \
+	TEST (lexer_multiplechars, "lexer")                                   \
+	TEST (lexer_ambiguous_multiplechars, "lexer")                         \
 	TEST (lexer_preprocess_macrofn_depth, "lexer")                        \
 	TEST (lexer_preprocess_macrofn_arguments, "lexer")                    \
 	TEST (lexer_preprocess_macrofn_arguments_depth, "lexer")

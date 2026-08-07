@@ -7,10 +7,11 @@
 #include <stdint.h>
 
 typedef uint16_t pix;
-typedef struct
-{
+typedef struct {
 	pix r, g, b;
 } Color;
+
+typedef enum { Mono, Rgb } ColoringType;
 
 typedef Color** Colors;
 
@@ -21,9 +22,9 @@ void
 colors_free (Colors, uint height);
 
 void
-apply_to_color (Color*, pix);
+apply_to_color (Color*, Color);
 
-typedef pix (*forpixel) (pxpos, pxpos, ImageProps, void*);
+typedef Color (*forpixel) (pxpos, pxpos, ImageProps, void*);
 
 void
 colors_for (Colors c, ImageProps p, forpixel f, void* s);

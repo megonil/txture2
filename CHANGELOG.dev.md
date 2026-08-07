@@ -1,3 +1,9 @@
+## `2.0.14` Changelog
+
+- generate images using txr script
+- new operators: boolean, bitwise
+- builtin variables: X Y W H U V M
+
 ## `2.0.13` Changelog
 
 - preprocess lexing: macros and aliases

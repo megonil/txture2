@@ -5,10 +5,27 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-void
-apply_to_color (Color* c, pix v)
+extern ColoringType coloring_type;
+
+static inline void
+apply_to_color_rgb (Color* c, Color v)
 {
-	c->r = c->g = c->b = v;
+	c->r = v.r;
+	c->g = v.g;
+	c->b = v.b;
+}
+
+static inline void
+apply_to_color_mono (Color* c, pix v)
+{ c->r = c->g = c->b = v; }
+
+void
+apply_to_color (Color* c, Color v)
+{
+	switch (coloring_type) {
+		case Mono: apply_to_color_mono (c, v.r); break;
+		case Rgb: apply_to_color_rgb (c, v); break;
+	}
 }
 
 void
@@ -34,9 +51,7 @@ colors_for (Colors c, ImageProps p, forpixel f, void* s)
 void
 colors_free (Colors c, uint height)
 {
-	for (uint y = 0; y < height; ++y) {
-		free (c[y]);
-	}
+	for (uint y = 0; y < height; ++y) { free (c[y]); }
 
 	free (c);
 }

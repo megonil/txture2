@@ -35,6 +35,9 @@ parse_double (const char* b, int* ok);
 float
 parse_float (const char* b, int* result);
 
+char* const
+readfile (const char* filename);
+
 #define from_u24()                                                        \
 	((uint32_t) high << 16) | ((uint32_t) mid << 8) | (uint32_t) low
 
@@ -42,5 +45,20 @@ parse_float (const char* b, int* result);
 	uint8_t low	 = (v) & 0xFF;                                            \
 	uint8_t mid	 = ((v) >> 8) & 0xFF;                                     \
 	uint8_t high = ((v) >> 16) & 0xFF
+
+#ifdef __GNUC__ // GCC 4.8+, Clang, Intel and other compilers compatible
+				// with GCC (-std=c++0x or above)
+[[noreturn]] inline __attribute__ ((always_inline)) void
+unreachable ()
+{ __builtin_unreachable (); }
+#elif defined(_MSC_VER) // MSVC
+[[noreturn]] __forceinline void
+unreachable ()
+{ __assume (false); }
+#else					// ???
+inline void
+unreachable ()
+{ abort (); }
+#endif
 
 #endif // !TXTURE2_UTILS_H

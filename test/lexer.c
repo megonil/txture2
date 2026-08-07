@@ -2,6 +2,7 @@
 
 #include "test.h"
 #include "txr/token.h"
+#include "unity.h"
 #include "utils.h"
 
 extern LexError lexerr;
@@ -23,7 +24,23 @@ check_error ()
 	}
 }
 
-#define expectT(T) TEST_ASSERT_EQUAL_INT (T, t)
+static void
+expectedT (TokenType expected, TokenType found, int line)
+{
+	if (expected != found) {
+		char buff[64];
+		snprintf (
+			buff,
+			64,
+			"expected %s, found %s",
+			tok_to_string (expected),
+			tok_to_string (found));
+
+		UnityFail (buff, line);
+	}
+}
+
+#define expectT(T) expectedT (T, t, __LINE__);
 #define expectF(F) TEST_ASSERT_DOUBLE_WITHIN (1e-12, F, token_value)
 #define expectE(E)                                                        \
 	TEST_ASSERT_EQUAL_INT (E, lexerr);                                    \
@@ -144,10 +161,18 @@ t (lexer_comments)
 	end ();
 }
 
+#define K(Kw, Str) Str " "
+
 t (lexer_keyword)
 {
-	prelude ("alias");
-	expect (TTAlias);
+	prelude (KEYWORDS);
+#undef K
+
+#define K(Kw, Str) expect (TT##Kw);
+
+	KEYWORDS
+
+#undef K
 
 	eof ();
 	end ();
@@ -273,6 +298,43 @@ t (lexer_preprocess_macrofn_arguments_depth)
 	expect_lit (10.0);
 	expect ('+');
 	expect_lit (30.0);
+
+	eof ();
+	end ();
+}
+
+#define M(Ch, Chs, Variant, Ch2, Ch2s) Chs Ch2s " "
+
+t (lexer_multiplechars)
+{
+	prelude (MULTIPLECHARS);
+#undef M
+
+#define M(Ch, Chs, Variant, Ch2, Ch2s) expect (TT##Variant);
+
+	MULTIPLECHARS;
+
+#undef M
+
+	eof ();
+	end ();
+}
+
+#define A(Ch, Chs, Left, Ls, Right, Rs, V1, V2) Chs Ls " " Chs Rs " "
+
+t (lexer_ambiguous_multiplechars)
+{
+	prelude (AMBIGUOUS_MULTIPLECHARS);
+
+#undef A
+
+#define A(Ch, Chs, Left, Ls, Right, Rs, V1, V2)                           \
+	expect (TT##V1);                                                      \
+	expect (TT##V2);
+
+	AMBIGUOUS_MULTIPLECHARS
+
+#undef A
 
 	eof ();
 	end ();

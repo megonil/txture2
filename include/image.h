@@ -3,8 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct
-{
+typedef struct {
 	unsigned width, height;
 	uint16_t max_colors;
 } ImageProps;

@@ -13,8 +13,8 @@ typedef struct {
 	char**	strings_to_free;
 } Chunk;
 
-void
-chunk_init (Chunk* chunk);
+Chunk*
+make_chunk ();
 
 void
 byte (Chunk* chunk, uint8_t byte);

@@ -1,6 +1,8 @@
 #ifndef TXTURE2_TXR_VM_H
 #define TXTURE2_TXR_VM_H
 
+#include "color.h"
+#include "image.h"
 #include "table.h"
 #include "txr/chunk.h"
 #include "txr/value.h"
@@ -19,6 +21,7 @@ typedef struct {
 typedef struct {
 	VMError		code;
 	const char* args[4];
+	Color		color;
 	tvalue		last;
 } VMResult;
 
@@ -33,7 +36,12 @@ make_vm ();
 
 /// Execute and return some result
 VMResult
-execute (VM* vm, const Chunk* chunk);
+execute (
+	VM*				  vm,
+	const Chunk*	  chunk,
+	tvalue			  x,
+	tvalue			  y,
+	const ImageProps* props);
 
 /// Print the result(if there's an error)
 void vm_print (VMResult);

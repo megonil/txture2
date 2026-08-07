@@ -6,12 +6,6 @@
 #include <errno.h>
 #include <writer.h>
 
-static const uint		   default_height		 = 600;
-static const uint		   default_width		 = 600;
-static const uint		   default_max_colors	 = 255;
-static const char* const   default_base_filename = "out";
-static const GeneratorType default_gentype		 = simplex;
-
 static void
 default_settings (struct Settings* s)
 {
