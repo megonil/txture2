@@ -21,7 +21,7 @@ t (chunk_byte)
 {
 	pro ();
 
-	byte (chunk, 124);
+	byte (chunk, 124, 0);
 	TEST_ASSERT_EQUAL (124, last (chunk->code));
 
 	epi ();
@@ -31,7 +31,7 @@ t (chunk_constant)
 {
 	pro ();
 
-	size_t idx = constant (chunk, 130.5);
+	size_t idx = constant (chunk, 130.5, 0);
 	TEST_ASSERT_EQUAL_FLOAT (130.5, chunk->constants[idx]);
 
 	epi ();
@@ -41,9 +41,9 @@ t (chunk_expanded)
 {
 	pro ();
 
-	for (uint i = 0; i <= 255; ++i) constant (chunk, i);
+	for (uint i = 0; i <= 255; ++i) constant (chunk, i, 0);
 
-	constant (chunk, 25777);
+	constant (chunk, 25777, 0);
 
 	uint8_t	 low   = pop (chunk->code);
 	uint8_t	 mid   = pop (chunk->code);

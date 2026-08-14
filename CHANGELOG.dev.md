@@ -1,3 +1,7 @@
+## `2.0.16` Changelog
+
+- pragmas
+
 ## `2.0.15` Changelog
 
 - parallel generation

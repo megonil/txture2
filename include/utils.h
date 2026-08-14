@@ -20,6 +20,7 @@ typedef uint64_t pxpos;
 	} while (0)
 
 #define note(fmt, ...) fprintln (stderr, "note: " fmt, ##__VA_ARGS__)
+#define warn(fmt, ...) fprintln (stderr, "warning: " fmt, ##__VA_ARGS__)
 
 #define streq(a, b) strcmp (a, b) == 0
 

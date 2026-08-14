@@ -6,6 +6,7 @@
 // hashmap
 
 #include "txr/macro.h"
+#include "txr/pragmas.h"
 #include "txr/token.h"
 #include "txr/value.h"
 
@@ -63,6 +64,7 @@ define_tablestr (VariableSet, const char*, size_t);
 define_tablestr (Variable, const char*, tvalue);
 define_tablestr (Macro, char*, Macro);
 define_tablestr (Arg, char*, ExtendedToken*);
+define_tablestr (Pragma, const char*, PragmaKind);
 
 #undef justtable
 

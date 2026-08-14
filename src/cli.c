@@ -68,7 +68,7 @@ parse_uint (const char* s)
 {
 	const float x = parse (s, "integer");
 	if (x < 0) error ("expected a positive number");
-	if (x - (int) x != 0.0) note ("ignoring fractional part");
+	if (x - (int) x != 0.0) warn ("ignoring fractional part");
 
 	return (uint) x;
 }

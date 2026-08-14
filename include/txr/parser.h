@@ -11,6 +11,7 @@ typedef struct {
 
 	ConstantTable	 constants;
 	VariableSetTable var_set;
+	PragmaTable		 pragma_table;
 
 	const char* sourcename;
 	char*		prev_buffer;

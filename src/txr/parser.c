@@ -5,6 +5,7 @@
 #include "txr/chunk.h"
 #include "txr/lexer.h"
 #include "txr/opcode.h"
+#include "txr/pragmas.h"
 #include "txr/token.h"
 #include "txr/vmbuiltin.h"
 #include "utils.h"
@@ -132,7 +133,10 @@ move_tokens (Parser* parser)
 	parser->previous = parser->current;
 	copy (parser->prev_buffer, parser->lexer.buffer);
 	parser->current = preprocess_lex (&parser->lexer);
-	debug ("With %s", tok_to_string (parser->current));
+	debug (
+		"With %s at %zu",
+		tok_to_string (parser->current),
+		parser->lexer.lineno);
 
 	print_lexerror (parser);
 }
@@ -148,6 +152,7 @@ parser_free (Parser* parser)
 	lexer_free (&parser->lexer);
 	ConstantTableFree (&parser->constants);
 	VariableSetTableFree (&parser->var_set);
+	PragmaTableFree (&parser->pragma_table);
 	array_free (parser->prev_buffer);
 
 	free (parser);
@@ -181,6 +186,14 @@ builtin_variables (Parser* parser)
 #undef VAR
 #undef EVAR
 
+#define P(Variant, Str) {.key = Str, .value = Pr##Variant},
+
+static void
+populate_pragma_table (PragmaTable* tbl)
+{ TableInitList (Pragma, tbl, PRAGMAS); }
+
+#undef P
+
 Parser*
 make_parser (const char* source, const char* sourcename, Chunk* ch)
 {
@@ -199,6 +212,8 @@ make_parser (const char* source, const char* sourcename, Chunk* ch)
 	lexer_init (&parser->lexer, source);
 	ConstantTableInit (&parser->constants);
 	VariableSetTableInit (&parser->var_set);
+	PragmaTableInit (&parser->pragma_table);
+	populate_pragma_table (&parser->pragma_table);
 
 	builtin_variables (parser);
 
@@ -255,16 +270,18 @@ add_constant (Parser* parser, tvalue v)
 {
 	if (ConstantTableContains (&parser->constants, v)) {
 		raw_constant (
-			parser->chunk, *ConstantTableGet (&parser->constants, v));
+			parser->chunk,
+			*ConstantTableGet (&parser->constants, v),
+			parser->lexer.lineno);
 	} else {
-		size_t index = constant (parser->chunk, v);
+		size_t index = constant (parser->chunk, v, parser->lexer.lineno);
 		ConstantTableInsert (&parser->constants, v, index);
 	}
 }
 
 static void
 emit (Parser* parser, uint8_t bte)
-{ byte (parser->chunk, bte); }
+{ byte (parser->chunk, bte, parser->lexer.lineno); }
 
 static void
 number (Parser* parser)
@@ -364,20 +381,63 @@ id_expr (Parser* parser)
 	if (curr == '=') {
 		next ();
 		expression (parser);
-		instruction_with_index (parser->chunk, Set, idx);
+		instruction_with_index (
+			parser->chunk, Set, idx, parser->lexer.lineno);
 	} else {
-		instruction_with_index (parser->chunk, Load, idx);
+		instruction_with_index (
+			parser->chunk, Load, idx, parser->lexer.lineno);
 	}
+}
+
+static void
+pragma (Parser* parser)
+{
+	next ();
+
+	consume (parser, TTId);
+	const char* const key = parser->prev_buffer;
+
+	if (!PragmaTableContains (&parser->pragma_table, key)) {
+		rich_error (parser, "unknown pragma %s", key);
+		return;
+	}
+
+	PragmaKind kind = *PragmaTableGet (&parser->pragma_table, key);
+	define_pragma (kind);
 }
 
 static void
 statement (Parser* parser)
 {
 	switch (curr) {
+		case TTPragma: pragma (parser); break;
 		default: expression (parser);
 #ifndef TXTURE2_DEBUG
 			emit (parser, Pop);
 #endif
+	}
+}
+
+static inline void
+incompatible_pragma_error ()
+{
+	warn ("Incompatible pragmas found, no rules were applied");
+	pragmas = 0;
+}
+
+static void
+assert_pragmas ()
+{
+	if (check_pragma (ExpandAll)
+		&& (check_pragma (ExpandR) || check_pragma (ExpandG)
+			|| check_pragma (ExpandB))) {
+		incompatible_pragma_error ();
+	} else if (check_pragma (ExpandAll) && check_pragma (Mono)) {
+		incompatible_pragma_error ();
+	} else if (
+		check_pragma (Mono)
+		&& (check_pragma (ExpandG) || check_pragma (ExpandB))) {
+		incompatible_pragma_error ();
 	}
 }
 
@@ -391,6 +451,8 @@ parse (Parser* parser)
 	disassemble (parser->chunk);
 #endif
 	debug ("==> end");
+	debug ("generated pragmas: %u", pragmas);
+	assert_pragmas ();
 
 	int result = !parser->had_error;
 	return result;

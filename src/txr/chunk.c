@@ -19,6 +19,8 @@ make_chunk ()
 	chunk->code			   = array (opcode);
 	chunk->constants	   = array (tvalue);
 	chunk->strings_to_free = array (char*);
+	chunk->lines		   = array (uint);
+	chunk->last_line	   = 1;
 
 	return chunk;
 }
@@ -34,48 +36,66 @@ chunk_free (Chunk* chunk)
 	}
 
 	array_free (chunk->strings_to_free);
+	array_free (chunk->lines);
 
 	free (chunk);
 }
 
 inline void
-byte (Chunk* chunk, uint8_t b)
-{ push (chunk->code, (opcode) b); }
+byte (Chunk* chunk, uint8_t b, uint line)
+{
+	push (chunk->code, (opcode) b);
+
+	if (line == chunk->last_line) {
+		last (chunk->lines)++;
+	} else {
+		push (chunk->lines, 1);
+		chunk->last_line = line;
+	}
+}
 
 void
-emitbytes (Chunk* chunk, ...)
+emitbytes (Chunk* chunk, uint line, ...)
 {
 	va_list bytes;
-	va_start (bytes, chunk);
+	va_start (bytes, line);
 
 	for (int bte; (bte = va_arg (bytes, int)) != -1;) {
-		byte (chunk, bte);
+		byte (chunk, bte, line);
 	}
 
 	va_end (bytes);
 }
 
 void
-instruction_with_index (Chunk* chunk, opcode instruction, size_t index)
+instruction_with_index (
+	Chunk* chunk,
+	opcode instruction,
+	size_t index,
+	uint   line)
 {
 	if (index > UINT8_MAX) {
 		to_u24 (index);
-		bytes (Expand, instruction, high, mid, low);
+		bytes (line, Expand, instruction, high, mid, low);
 	} else {
-		bytes (instruction, index);
+		bytes (line, instruction, index);
 	}
 }
 
 inline void
-instruction_constant (Chunk* chunk, opcode instruction, tvalue v)
+instruction_constant (
+	Chunk* chunk,
+	opcode instruction,
+	tvalue v,
+	uint   line)
 {
 	return instruction_with_index (
-		chunk, instruction, write_constant (chunk, v));
+		chunk, instruction, write_constant (chunk, v), line);
 }
 
 inline void
-raw_constant (Chunk* chunk, size_t index)
-{ instruction_with_index (chunk, Const, index); }
+raw_constant (Chunk* chunk, size_t index, uint line)
+{ instruction_with_index (chunk, Const, index, line); }
 
 size_t
 write_constant (Chunk* chunk, tvalue v)
@@ -85,10 +105,10 @@ write_constant (Chunk* chunk, tvalue v)
 }
 
 size_t
-constant (Chunk* chunk, tvalue v)
+constant (Chunk* chunk, tvalue v, uint line)
 {
 	size_t idx = write_constant (chunk, v);
-	raw_constant (chunk, idx);
+	raw_constant (chunk, idx, line);
 
 	return idx;
 }
@@ -118,7 +138,7 @@ disassemble_const (Chunk* chunk, opcode* code, int expanded)
 
 	tvalue v = chunk->constants[index];
 
-	println ("%sconst %zu (%g)", additional_tag, index, v);
+	printf ("%sconst %zu (%g)", additional_tag, index, v);
 
 	return code;
 }
@@ -134,7 +154,7 @@ disassemble_setload (
 	size_t		index  = get_index (&code, expanded);
 	const char* string = chunk->strings_to_free[index];
 
-	println ("%s %zu (%s)", instruction_str, index, string);
+	printf ("%s %zu (%s)", instruction_str, index, string);
 
 	return code;
 }
@@ -148,7 +168,7 @@ disassemble_set (Chunk* chunk, opcode* code, int expanded)
 { return disassemble_setload (chunk, code, expanded, "set"); }
 
 #define B(Variant, Ch, Str, Prec)                                         \
-	case Variant: println (Str " (%s)", tok_to_string (Ch)); break;
+	case Variant: printf (Str " (%s)", tok_to_string (Ch)); break;
 
 static opcode*
 disassemble_binary (Chunk* chunk, opcode* code)
@@ -162,7 +182,7 @@ disassemble_binary (Chunk* chunk, opcode* code)
 }
 
 #define U(Variant, Ch, Str, Op)                                           \
-	case Variant: println (Str " (%c)", Ch); break;
+	case Variant: printf (Str " (%c)", Ch); break;
 
 static opcode*
 disassemble_unary (Chunk* chunk, opcode* code)
@@ -184,16 +204,29 @@ disassemble_unary (Chunk* chunk, opcode* code)
 void
 disassemble (Chunk* chunk)
 {
-	opcode* code	 = chunk->code;
-	int		expanded = 0;
+	opcode* code = chunk->code;
+	opcode* end	 = chunk->code + len (chunk->code);
+	uint*	line = chunk->lines;
 
-	while (code < chunk->code + len (chunk->code)) {
+	uint remaining	 = 0;
+	uint source_line = 0;
+
+	int expanded = 0;
+
+	while (code < end) {
+		if (remaining == 0) {
+			remaining = *line++;
+			source_line++;
+		}
+
+		opcode* last = code;
+
 		// clang-format off
-		printf("%-7zu ", code - chunk->code);
+		printf("%-7zu ", (size_t)(code - chunk->code));
 
 		switch (*code) {
-			case Expand: expanded = 1; code++; println("expand"); continue;
-			case Pop: code++; println("pop"); break;
+			case Expand: expanded = 1; code++; printf ("expand"); goto next_;
+			case Pop: code++; printf ("pop"); break;
 			case Load:
 				code = disassemble_load(chunk ,code, expanded);
 				break;
@@ -205,15 +238,19 @@ disassemble (Chunk* chunk)
 				break;
 
 			UNARY_INSTRUCTIONS
-				code = disassemble_unary(chunk, code); break;
+				code = disassemble_unary(chunk, code);
+				break;
 
 			BINARY_INSTRUCTIONS
 				code = disassemble_binary (chunk, code);
 				break;
-			}
-
-		expanded = 0;
+		}
 		// clang-format on
+		expanded = 0;
+	next_:
+		remaining -= (uint) (code - last);
+
+		printf ("\033[35G| line=%u\n", source_line);
 	}
 }
 

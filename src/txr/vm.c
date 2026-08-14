@@ -5,6 +5,7 @@
 #include "table.h"
 #include "txr/chunk.h"
 #include "txr/opcode.h"
+#include "txr/pragmas.h"
 #include "txr/vmbuiltin.h"
 #include "utils.h"
 
@@ -20,8 +21,10 @@ extern double osc_freq;
 	(const char*[])                                                       \
 	{ none, none, none, none }
 
-// this one will get it's use in the future
-size_t _Thread_local line = 1;
+uint _Thread_local line			   = 1;
+uint _Thread_local suspend_error_R = 0;
+uint _Thread_local suspend_error_G = 0;
+uint _Thread_local suspend_error_B = 0;
 
 #define default_last 0.0
 
@@ -30,7 +33,7 @@ size_t _Thread_local line = 1;
 	{                                                                     \
 		.code = {.line = eline, .kind = ekind},                           \
 		.args = {aargs[0], aargs[1], aargs[2], aargs[3]}, .last = llast,  \
-		.color = generated_color (vm)                                     \
+		.color = generated_color (vm, props)                              \
 	}
 
 #define ok(v) return result (line, VMOK, nonearr, v)
@@ -77,19 +80,80 @@ vm_free (VM* vm)
 	free (vm);
 }
 
+static pix
+to_pix (
+	tvalue			  x,
+	const char*		  component,
+	const ImageProps* props,
+	uint*			  suspend)
+{
+	if (suspend) return (pix) x;
+
+	if (x < 0) {
+		warn (
+			"color component '%s': %.3f < 0, clamped to 0", component, x);
+		*suspend = 1;
+		return 0;
+	}
+
+	if (x > props->max_colors) {
+		warn (
+			"color component '%s': %.3f > max value %u, clamped to %u",
+			component,
+			x,
+			props->max_colors,
+			props->max_colors);
+		*suspend = 1;
+
+		return (pix) props->max_colors;
+	}
+
+	return (pix) x;
+}
+
+#define expand(v) v * props->max_colors
+
+#define define_component_to_pix(component)                                \
+	static inline pix component##_to_pix (                                \
+		tvalue component, const ImageProps* props)                        \
+	{                                                                     \
+		const pix result = to_pix (                                       \
+			component,                                                    \
+			component##_VARIABLE,                                         \
+			props,                                                        \
+			&suspend_error_##component);                                  \
+		if (check_pragma (Expand##component)) return expand (result);     \
+		return result;                                                    \
+	}
+
+define_component_to_pix (R);
+define_component_to_pix (G);
+define_component_to_pix (B);
+
 static Color
-generated_color (VM* vm)
+generated_color (VM* vm, const ImageProps* props)
 {
 	tvalue R = *VariableTableGet (&vm->variables, R_VARIABLE);
 	tvalue G = *VariableTableGet (&vm->variables, G_VARIABLE);
 	tvalue B = *VariableTableGet (&vm->variables, B_VARIABLE);
 
 	Color out;
-	// place to add directives
 
-	out.r = R;
-	out.g = G;
-	out.b = B;
+	if (check_pragma (ExpandAll)) {
+		R = expand (R);
+		G = expand (G);
+		B = expand (B);
+	}
+
+	out.r = R_to_pix (R, props);
+
+	if (check_pragma (Mono)) {
+		out.g = out.b = out.r;
+		return out;
+	}
+
+	out.g = G_to_pix (G, props);
+	out.b = B_to_pix (B, props);
 
 	return out;
 }
@@ -184,6 +248,24 @@ static inline tvalue
 value_Or (tvalue a, tvalue b)
 { return a || b; }
 
+static inline void
+sync_line (
+	const Chunk*  chunk,
+	const opcode* code,
+	size_t*		  line_index,
+	size_t*		  line_end)
+{
+	const size_t offset	   = (size_t) (code - chunk->code);
+	const size_t lines_len = len (chunk->lines);
+
+	while (*line_index + 1 < lines_len && offset >= *line_end) {
+		++(*line_index);
+		*line_end += chunk->lines[*line_index];
+	}
+
+	line = *line_index + 1;
+}
+
 #define U(Variant, Ch, Str, Op)                                           \
 	case Variant: {                                                       \
 		spush (Op (spop ()));                                             \
@@ -212,8 +294,13 @@ execute (
 	opcode* code = chunk->code;
 	opcode* end	 = chunk->code + len (chunk->code);
 
+	size_t line_index = 0;
+	size_t line_end	  = len (chunk->lines) ? chunk->lines[0] : 0;
+
 	uint8_t expanded = 0;
 	while (code < end) {
+		sync_line (chunk, code, &line_index, &line_end);
+
 		// clang-format off
 		switch (*code++) {
 			case Expand: expanded = 1; continue;
@@ -260,11 +347,17 @@ execute (
 #undef B
 #undef U
 
-#define position " at %zu"
+#define position "runtime error at line %u: "
 #define V(Variant, Fmt)                                                   \
 	case Variant:                                                         \
-		fprintf (                                                         \
-			stderr, Fmt, e.args[0], e.args[1], e.args[2], e.args[3]);     \
+		eprintln (                                                        \
+			position Fmt,                                                 \
+			e.code.line,                                                  \
+			e.args[0],                                                    \
+			e.args[1],                                                    \
+			e.args[2],                                                    \
+			e.args[3]);                                                   \
+		fflush (stderr);                                                  \
 		break;
 
 void
@@ -274,8 +367,6 @@ vm_print (VMResult e)
 		VMERRORS;
 		default: break;
 	}
-
-	eprintln (position, e.code.line);
 }
 
 #undef V

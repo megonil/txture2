@@ -82,7 +82,7 @@ t (vm_unary)
 t (vm_constant)
 {
 	pro ("");
-	for (size_t i = 0; i <= 257; ++i) constant (chunk, i);
+	for (size_t i = 0; i <= 257; ++i) constant (chunk, i, 0);
 	exec ();
 
 	assert_top (257.0);

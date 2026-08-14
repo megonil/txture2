@@ -61,6 +61,8 @@
 	TEST (parser_complex_expr, "parser")                                  \
 	TEST (parser_variable_get, "parser")                                  \
 	TEST (parser_variable_set, "parser")                                  \
+	TEST (parser_pragmas_null, "parser")                                  \
+	TEST (parser_pragmas_correct, "parser")                               \
 	TEST (parser_binary_additional, "parser")                             \
 	TEST (parser_more_complex_expr, "parser")
 

@@ -23,7 +23,8 @@
 	K (Fn, "fn")                                                          \
 	K (End, "end")                                                        \
 	K (And, "and")                                                        \
-	K (Or, "or")
+	K (Or, "or")                                                          \
+	K (Pragma, "pragma")
 
 #define str_from2(c, c2)                                                  \
 	(const char[])                                                        \

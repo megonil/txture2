@@ -3,6 +3,8 @@
 #include "array.h"
 #include "test.h"
 #include "txr/chunk.h"
+#include "txr/pragmas.h"
+#include "unity.h"
 #include "utils.h"
 
 #include <stdarg.h>
@@ -24,6 +26,19 @@
 #define epi()                                                             \
 	parser_free (p);                                                      \
 	chunk_free (chunk);
+
+void
+assert_pragmas_impl (const PragmaKind* expected, size_t n)
+{
+	// number of bits
+	TEST_ASSERT_LESS_OR_EQUAL (sizeof (pragmas) * 8, n);
+
+	uint x = 0;
+
+	for (size_t i = 0; i < n; ++i) { x |= (1 << expected[i]); }
+
+	TEST_ASSERT_EQUAL_UINT (x, pragmas);
+}
 
 void
 assert_bytecode_impl (
@@ -49,6 +64,13 @@ assert_bytecode_impl (
 		chunk,                                                            \
 		(uint8_t[]){__VA_ARGS__},                                         \
 		sizeof ((uint8_t[]){__VA_ARGS__}) / sizeof (uint8_t))
+
+#define assert_pragmas(...)                                               \
+	assert_pragmas_impl (                                                 \
+		(PragmaKind[]){__VA_ARGS__},                                      \
+		sizeof ((PragmaKind[]){__VA_ARGS__}) / sizeof (PragmaKind))
+
+#define assert_no_pragmas() TEST_ASSERT_EQUAL_UINT (0, pragmas)
 
 t (parser)
 {
@@ -191,6 +213,26 @@ t (parser_variable_get)
 	_parse ();
 
 	assert_bytecode (Const, 0, Const, 1, Add, Set, 0, Load, 0);
+
+	epi ();
+}
+
+t (parser_pragmas_correct)
+{
+	pro ("pragma expand_r\npragma mono");
+	_parse ();
+
+	assert_pragmas (PrExpandR, PrMono);
+
+	epi ();
+}
+
+t (parser_pragmas_null)
+{
+	pro ("pragma expand\npragma expand_r");
+	_parse ();
+
+	assert_no_pragmas ();
 
 	epi ();
 }
