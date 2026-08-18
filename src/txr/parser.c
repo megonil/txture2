@@ -17,18 +17,20 @@
 #include <stdlib.h>
 
 #define parsef(name) static void name (Parser* parser)
-parsef (id_expr);
-parsef (binary_r);
-parsef (binary_l);
-parsef (number);
-parsef (unary);
-parsef (grouping);
+#define exprf(name) static void name (Parser* parser, uint8_t can_assign)
+exprf (id);
+exprf (binary_r);
+exprf (binary_l);
+exprf (number);
+exprf (unary);
+exprf (grouping);
 parsef (expression);
 parsef (statement);
 #undef parsef
 
 typedef enum {
 	PNone,
+	PAssign,
 	POr,
 	PAnd,
 	PBinOr,
@@ -44,7 +46,7 @@ typedef enum {
 	PPrimary,
 } Precedence;
 
-typedef void (*ParseFn) (Parser* parser);
+typedef void (*ParseFn) (Parser* parser, uint8_t can_assign);
 
 typedef struct {
 	ParseFn	   prefix;
@@ -86,11 +88,11 @@ init_parsing_rules ()
 	BINARY_INSTRUCTIONS
 	UNARY_INSTRUCTIONS
 
+	custom (TTId, pref (id));
 	custom ('-', all (unary, binary_r, PTerm));
 	custom ('^', infp (binary_l, PPow));
 	custom ('(', pref (grouping));
 	custom (TTNumber, pref (number));
-	custom (TTId, pref (id_expr));
 }
 
 static ParseRule*
@@ -161,6 +163,10 @@ parser_free (Parser* parser)
 static size_t
 push_name (Parser* parser, const char* s)
 {
+	if (VariableSetTableContains (&parser->var_set, s)) {
+		return *VariableSetTableGet (&parser->var_set, s);
+	}
+
 	char* str = strdup (s);
 
 	push (parser->chunk->strings_to_free, str);
@@ -284,11 +290,11 @@ emit (Parser* parser, uint8_t bte)
 { byte (parser->chunk, bte, parser->lexer.lineno); }
 
 static void
-number (Parser* parser)
+number (Parser* parser, uint8_t can_assign)
 { add_constant (parser, token_value); }
 
 static void
-grouping (Parser* parser)
+grouping (Parser* parser, uint8_t can_assign)
 {
 	expression (parser);
 	consume (parser, ')');
@@ -304,17 +310,19 @@ prec (Parser* parser, Precedence prec)
 		return;
 	}
 
-	pref (parser);
+	uint8_t can_assign = prec <= PAssign;
+
+	pref (parser, can_assign);
 
 	while (prec <= get_rule (curr)->prec
 		   && get_rule (curr)->prec > PNone) {
 		next ();
 		ParseFn inf = get_rule (prev)->infix;
-		inf (parser);
+		inf (parser, can_assign);
 	}
 }
 
-static void
+static inline void
 expression (Parser* parser)
 { prec (parser, PNone); }
 
@@ -322,7 +330,7 @@ expression (Parser* parser)
 	case Ch: emit (parser, Variant); break;
 
 static void
-unary (Parser* parser)
+unary (Parser* parser, uint8_t can_assign)
 {
 	TokenType operator = prev;
 
@@ -352,41 +360,44 @@ binary_impl (Parser* parser, Precedence next, TokenType op)
 }
 
 static inline void
-binary_r (Parser* parser)
+binary_r (Parser* parser, uint8_t can_assign)
 { binary_impl (parser, get_rule (prev)->prec + 1, prev); }
 
 static inline void
-binary_l (Parser* parser)
+binary_l (Parser* parser, uint8_t can_assign)
 { binary_impl (parser, get_rule (prev)->prec, prev); }
 
 #undef B
 
-static void
-id_expr (Parser* parser)
+static size_t
+parse_arguments (Parser* parser)
 {
-	debug (
-		"id_expr: prevbuffer=%s, curr=%d, currbuffer=%s",
-		parser->prev_buffer,
-		curr,
-		parser->lexer.buffer);
-	const char* varname = parser->prev_buffer;
-
-	size_t idx;
-	if (!VariableSetTableContains (&parser->var_set, varname)) {
-		idx = push_name (parser, varname);
-	} else {
-		idx = *VariableSetTableGet (&parser->var_set, varname);
-	}
-
-	if (curr == '=') {
-		next ();
+	size_t argc = 0;
+	for (; curr != ')' && curr != TTEof; argc++) {
 		expression (parser);
-		instruction_with_index (
-			parser->chunk, Set, idx, parser->lexer.lineno);
-	} else {
-		instruction_with_index (
-			parser->chunk, Load, idx, parser->lexer.lineno);
+		if (curr == ',') {
+			next ();
+			continue;
+		}
 	}
+
+	return argc;
+}
+
+static void
+call (Parser* parser, size_t fn_name_id)
+{
+	size_t argc = parse_arguments (parser);
+	consume (parser, ')');
+
+	debug (
+		"At Builtin function %s with %zu arguments provided",
+		parser->chunk->strings_to_free[fn_name_id],
+		argc);
+
+	instruction_with_index (
+		parser->chunk, Call, fn_name_id, parser->lexer.lineno);
+	emit (parser, argc);
 }
 
 static void
@@ -407,14 +418,74 @@ pragma (Parser* parser)
 }
 
 static void
+variable_set (Parser* parser, size_t idx)
+{
+	expression (parser);
+	instruction_with_index (parser->chunk, Set, idx, parser->lexer.lineno);
+}
+
+static void
+id (Parser* parser, uint8_t can_assign)
+{
+	const char* id	= parser->prev_buffer;
+	size_t		idx = push_name (parser, id);
+
+	if (curr == '=' && can_assign) {
+		next ();
+		variable_set (parser, idx);
+	} else if (curr == '=' && !can_assign) {
+		rich_error (parser, "can not assign to target");
+	} else if (curr == '(') {
+		next ();
+		call (parser, idx);
+	} else {
+		instruction_with_index (
+			parser->chunk, Load, idx, parser->lexer.lineno);
+	}
+}
+
+static void
+id_expr (Parser* parser, uint8_t can_assign)
+{
+	debug (
+		"id_expr: prevbuffer=%s, curr=%d, currbuffer=%s",
+		parser->prev_buffer,
+		curr,
+		parser->lexer.buffer);
+	const char* varname = parser->prev_buffer;
+
+	size_t idx;
+	if (!VariableSetTableContains (&parser->var_set, varname)) {
+		idx = push_name (parser, varname);
+	} else {
+		idx = *VariableSetTableGet (&parser->var_set, varname);
+	}
+
+	if (curr == '=') {
+		next ();
+		expression (parser);
+		instruction_with_index (
+			parser->chunk, Set, idx, parser->lexer.lineno);
+	} else if (curr == '(') {
+		idx = push_name (parser, varname);
+		next ();
+
+		call (parser, idx);
+	} else {
+		instruction_with_index (
+			parser->chunk, Load, idx, parser->lexer.lineno);
+	}
+}
+
+static void
 statement (Parser* parser)
 {
 	switch (curr) {
 		case TTPragma: pragma (parser); break;
-		default: expression (parser);
-#ifndef TXTURE2_DEBUG
+		default:
+			expression (parser);
 			emit (parser, Pop);
-#endif
+			break;
 	}
 }
 

@@ -9,6 +9,7 @@
 #include "txr/pragmas.h"
 #include "txr/token.h"
 #include "txr/value.h"
+#include "txr/vmbuiltin.h"
 
 #include <stdint.h>
 
@@ -65,11 +66,21 @@ define_tablestr (Variable, const char*, tvalue);
 define_tablestr (Macro, char*, Macro);
 define_tablestr (Arg, char*, ExtendedToken*);
 define_tablestr (Pragma, const char*, PragmaKind);
+define_tablestr (BuiltinFunctions, char*, BuiltinFunction);
 
 #undef justtable
 
 define_table (Num, int, int);
 define_table (Constant, tvalue, uint32_t);
+
+#define TablePushList(Name, table, ...)                                   \
+	do {                                                                  \
+		Name##TableItem _items[] = {__VA_ARGS__};                         \
+		uint32_t		_count	 = sizeof (_items) / sizeof (_items[0]);  \
+		for (uint32_t _i = 0; _i < _count; _i++) {                        \
+			Name##TableInsert (table, _items[_i].key, _items[_i].value);  \
+		}                                                                 \
+	} while (0)
 
 #define TableInitList(Name, table, ...)                                   \
 	do {                                                                  \

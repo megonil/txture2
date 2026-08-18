@@ -4,6 +4,7 @@
 #include "test.h"
 #include "txr/chunk.h"
 #include "txr/pragmas.h"
+#include "txr/vmbuiltin.h"
 #include "unity.h"
 #include "utils.h"
 
@@ -16,12 +17,16 @@
 	Chunk*	chunk = make_chunk ();                                        \
 	Parser* p	  = make_parser (source, "source", chunk);
 
+#define s(i) BUILTIN_VARIABLES_N + i
+
 #define _parse() parse (p)
-#define at(array, i) array[i]
+#define at(array, i) array[(i)]
 #define cat(i) at (chunk->code, i)
 #define kat(i) at (chunk->constants, i)
+#define sat(i) at (chunk->strings_to_free, s (i))
 
 #define assert_constant(v, i) TEST_ASSERT_EQUAL_FLOAT (v, kat (i))
+#define assert_string(v, i) TEST_ASSERT_EQUAL_STRING (v, sat (i))
 
 #define epi()                                                             \
 	parser_free (p);                                                      \
@@ -88,7 +93,7 @@ t (parser_number)
 	pro ("1234.5");
 	_parse ();
 
-	assert_bytecode (Const, 0);
+	assert_bytecode (Const, 0, Pop);
 	assert_constant (1234.5f, 0);
 
 	epi ();
@@ -99,7 +104,7 @@ t (parser_simple_expr)
 	pro ("123.5 + 5690e-10");
 	_parse ();
 
-	assert_bytecode (Const, 0, Const, 1, Add);
+	assert_bytecode (Const, 0, Const, 1, Add, Pop);
 	assert_constant (123.5f, 0);
 	assert_constant (5690e-10f, 1);
 
@@ -111,7 +116,7 @@ t (parser_more_complex_expr)
 	pro ("-1234.56 + 12345 * 500");
 	_parse ();
 
-	assert_bytecode (Const, 0, Const, 1, Const, 2, Mul, Add);
+	assert_bytecode (Const, 0, Const, 1, Const, 2, Mul, Add, Pop);
 	assert_constant (-1234.56, 0);
 	assert_constant (12345, 1);
 	assert_constant (500, 2);
@@ -141,7 +146,8 @@ t (parser_complex_expr)
 		4,
 		Mul,
 		Neg,
-		Add);
+		Add,
+		Pop);
 
 	assert_constant (1, 0);
 	assert_constant (500, 1);
@@ -158,7 +164,7 @@ t (parser_pow)
 	_parse ();
 
 	assert_bytecode (
-		Const, 0, Const, 1, Const, 2, Sub, Pow, Const, 3, Pow);
+		Const, 0, Const, 1, Const, 2, Sub, Pow, Const, 3, Pow, Pop);
 	assert_constant (2, 0);
 	assert_constant (3, 1);
 	assert_constant (6, 2);
@@ -192,7 +198,8 @@ t (parser_binary_additional)
 		Mul,
 		Add,
 		Pow,
-		Add);
+		Add,
+		Pop);
 
 	epi ();
 }
@@ -202,7 +209,7 @@ t (parser_variable_set)
 	pro ("abcdef = 1238 + 150.56");
 	_parse ();
 
-	assert_bytecode (Const, 0, Const, 1, Add, Set, 0);
+	assert_bytecode (Const, 0, Const, 1, Add, Set, 0, Pop);
 
 	epi ();
 }
@@ -212,7 +219,7 @@ t (parser_variable_get)
 	pro ("abcdef = 1238 + 150.56 abcdef");
 	_parse ();
 
-	assert_bytecode (Const, 0, Const, 1, Add, Set, 0, Load, 0);
+	assert_bytecode (Const, 0, Const, 1, Add, Set, 0, Load, 0, Pop, Pop);
 
 	epi ();
 }
@@ -233,6 +240,29 @@ t (parser_pragmas_null)
 	_parse ();
 
 	assert_no_pragmas ();
+
+	epi ();
+}
+
+t (parser_call)
+{
+	pro ("sin(1230)");
+	_parse ();
+
+	assert_bytecode (Const, 0, Call, s (0), 1, Pop);
+	assert_constant (1230.0, 0);
+	assert_string ("sin", 0);
+
+	epi ();
+}
+
+t (parser_multiple_assigns)
+{
+	pro ("a = b = c = 100");
+	_parse ();
+
+	assert_bytecode (Const, 0, Set, s (0), Set, s (1), Set, s (2), Pop);
+	assert_constant (100.0, 0);
 
 	epi ();
 }

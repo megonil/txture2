@@ -56,6 +56,7 @@
 #define PARSER                                                            \
 	TEST (parser, "parser")                                               \
 	TEST (parser_pow, "parser")                                           \
+	TEST (parser_call, "parser")                                          \
 	TEST (parser_number, "parser")                                        \
 	TEST (parser_simple_expr, "parser")                                   \
 	TEST (parser_complex_expr, "parser")                                  \
@@ -63,11 +64,13 @@
 	TEST (parser_variable_set, "parser")                                  \
 	TEST (parser_pragmas_null, "parser")                                  \
 	TEST (parser_pragmas_correct, "parser")                               \
+	TEST (parser_multiple_assigns, "parser")                              \
 	TEST (parser_binary_additional, "parser")                             \
 	TEST (parser_more_complex_expr, "parser")
 
 #define VMT                                                               \
 	TEST (vm, "vm")                                                       \
+	TEST (vm_call, "vm")                                                  \
 	TEST (vm_unary, "vm")                                                 \
 	TEST (vm_binary, "vm")                                                \
 	TEST (vm_constant, "vm")                                              \
@@ -76,7 +79,9 @@
 	TEST (vm_unknown_variable, "vm")                                      \
 	TEST (vm_variable_setload, "vm")                                      \
 	TEST (vm_variable_reassign, "vm")                                     \
-	TEST (vm_variable_reassign_self, "vm")
+	TEST (vm_variable_reassign_self, "vm")                                \
+	TEST (vm_wrong_argument_quantity, "vm")                               \
+	TEST (vm_unknown_builtin_function, "vm")
 
 #define TESTS                                                             \
 	ARRAY                                                                 \

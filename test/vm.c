@@ -20,7 +20,7 @@
 	VM* vm = make_vm ()
 
 #define exec()                                                            \
-	VMResult result = execute (vm, chunk, 0, 0, &default_props);          \
+	VMResult result = execute (vm, chunk, 0, 0, &default_props, 0);       \
 	vm_print (result);
 
 #define nofail(source)                                                    \
@@ -140,5 +140,21 @@ t (vm_variable_reassign_self)
 	epi ();
 }
 
+t (vm_call)
+{
+	pro ("sin(3.1415)");
+	exec ();
+
+	assert_top (sin (3.1415));
+
+	epi ();
+}
+
 t (vm_unknown_variable)
 { fail ("hello", UnknownVariable); }
+
+t (vm_unknown_builtin_function)
+{ fail ("foo()", UnknownBuiltinFunction); }
+
+t (vm_wrong_argument_quantity)
+{ fail ("sin(1, 2)", WrongArgumentQuantity); }

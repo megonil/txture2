@@ -111,7 +111,7 @@ txr_gen (void* arg)
 	TxrGenState*	gen_s	  = (TxrGenState*) args->gen_state;
 	TxrThreadState* thr_state = (TxrThreadState*) args->thr_state;
 	VMResult		r		  = execute (
-		thr_state->vm, gen_s->chunk, args->x, args->y, &args->props);
+		thr_state->vm, gen_s->chunk, args->x, args->y, &args->props, 1);
 
 	if (r.code.kind != VMOK) {
 		vm_print (r);

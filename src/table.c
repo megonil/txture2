@@ -232,6 +232,7 @@ implementstr (Variable, const char*, tvalue, strequ, murmur);
 implementstr (Macro, char*, Macro, strequ, murmur);
 implementstr (Arg, char*, ExtendedToken*, strequ, murmur);
 implementstr (Pragma, const char*, PragmaKind, strequ, murmur);
+implementstr (BuiltinFunctions, char*, BuiltinFunction, strequ, murmur);
 
 implement (Num, int, int, intcmp, hash32);
 implement (Constant, tvalue, uint32_t, dblequ, hashdbl);

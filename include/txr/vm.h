@@ -8,7 +8,12 @@
 #include "txr/chunk.h"
 #include "txr/value.h"
 
-#define VMERRORS V (UnknownVariable, "unknown variable %s")
+#define VMERRORS                                                          \
+	V (UnknownVariable, "unknown variable `%s`")                          \
+	V (UnknownBuiltinFunction, "unknown builtin function `%s`")           \
+	V (WrongArgumentQuantity,                                             \
+	   "wrong argument quantity to function `%s`: expected %zu, found "   \
+	   "%zu")
 
 #define V(Variant, Str) Variant,
 typedef enum { VMOK = -1, VMERRORS } VMErrorKind;
@@ -27,8 +32,9 @@ typedef struct {
 } VMResult;
 
 typedef struct {
-	VariableTable variables;
-	tvalue*		  stack;
+	VariableTable		  variables;
+	BuiltinFunctionsTable functions;
+	tvalue*				  stack;
 } VM;
 
 /// Init virtual machine
@@ -42,9 +48,10 @@ execute (
 	const Chunk*	  chunk,
 	tvalue			  x,
 	tvalue			  y,
-	const ImageProps* props);
+	const ImageProps* props,
+	uint8_t			  do_pop);
 
-/// Print the result(if there's an error)
+/// Print runtime error(if there's one)
 void vm_print (VMResult);
 
 void

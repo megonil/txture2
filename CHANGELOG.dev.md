@@ -1,3 +1,9 @@
+## `2.0.17` Changelog
+
+- builtin function call
+- assignment chains
+- print correct line for vm errors
+
 ## `2.0.16` Changelog
 
 - pragmas

@@ -17,11 +17,9 @@
 extern double osc_freq;
 
 #define none 0
-#define nonearr                                                           \
-	(const char*[])                                                       \
-	{ none, none, none, none }
+#define nonearr ((const char*[]){none, none, none, none})
 
-uint _Thread_local line			   = 1;
+uint _Thread_local line			   = 0;
 uint _Thread_local suspend_error_R = 0;
 uint _Thread_local suspend_error_G = 0;
 uint _Thread_local suspend_error_B = 0;
@@ -36,38 +34,55 @@ uint _Thread_local suspend_error_B = 0;
 		.color = generated_color (vm, props)                              \
 	}
 
-#define ok(v) return result (line, VMOK, nonearr, v)
+#define resultl(ekind, aargs, llast) result (line, ekind, aargs, llast)
+
+#define ok(v) return resultl (VMOK, nonearr, v)
 
 #define args1(a) ((const char*[]){a, NULL, NULL, NULL})
 #define args2(a, b) ((const char*[]){a, b, NULL, NULL})
 #define args3(a, b, c) ((const char*[]){a, b, c, NULL})
 #define args4(a, b, c, d) ((const char*[]){a, b, c, d})
 
-#define err(kind, args) return result (line, kind, args, default_last)
+#define err(kind, args) return resultl (kind, args, default_last)
 
-#define VAR(Name, Default)                                                \
-	VariableTableInsert (&vm->variables, Name, Default);
+#define VAR(Name, Default) {.key = Name, .value = Default},
 static void
-builtin_variables (VM* vm){BUILTIN_VARIABLES}
+builtin_variables (VM* vm)
+{ TablePushList (Variable, &vm->variables, BUILTIN_VARIABLES); }
 #undef VAR
 
-#define EVAR(Name, Init) VariableTableInsert (&vm->variables, Name, Init);
-static void external_builtin_variables (
+#define EVAR(Name, Init) {.key = Name, .value = Init},
+static void
+external_builtin_variables (
 	VM*				  vm,
 	tvalue			  x,
 	tvalue			  y,
 	const ImageProps* props)
-{ EXTERNAL_BUILTIN_VARIABLES; }
+{ TablePushList (Variable, &vm->variables, EXTERNAL_BUILTIN_VARIABLES); }
 #undef EVAR
+
+#define B(Name, Argc)                                                     \
+	{.key = #Name,                                                        \
+	 .value                                                               \
+	 = (BuiltinFunction){.fun = txr_builtin_##Name, .argc = Argc}},
+
+static void
+init_builtin_functions (BuiltinFunctionsTable* t)
+{ TableInitList (BuiltinFunctions, t, BUILTIN_FUNCTIONS); }
+
+#undef B
 
 VM*
 make_vm ()
 {
 	VM* vm	  = malloc (sizeof (VM));
 	vm->stack = array (tvalue);
-	VariableTableInit (&vm->variables);
 
+	VariableTableInit (&vm->variables);
 	builtin_variables (vm);
+
+	BuiltinFunctionsTableInit (&vm->functions);
+	init_builtin_functions (&vm->functions);
 
 	return vm;
 }
@@ -76,6 +91,8 @@ inline void
 vm_free (VM* vm)
 {
 	VariableTableFree (&vm->variables);
+	BuiltinFunctionsTableFree (&vm->functions);
+
 	array_free (vm->stack);
 	free (vm);
 }
@@ -158,6 +175,8 @@ generated_color (VM* vm, const ImageProps* props)
 	return out;
 }
 
+#define bte() *code++
+
 #define index()                                                           \
 	uint32_t index;                                                       \
 	if (expanded) {                                                       \
@@ -166,7 +185,7 @@ generated_color (VM* vm, const ImageProps* props)
 		uint8_t low	 = *code++;                                           \
 		index		 = from_u24 ();                                       \
 	} else {                                                              \
-		index = *code++;                                                  \
+		index = bte ();                                                   \
 	}
 
 #define spush(v) push (vm->stack, (v))
@@ -248,24 +267,6 @@ static inline tvalue
 value_Or (tvalue a, tvalue b)
 { return a || b; }
 
-static inline void
-sync_line (
-	const Chunk*  chunk,
-	const opcode* code,
-	size_t*		  line_index,
-	size_t*		  line_end)
-{
-	const size_t offset	   = (size_t) (code - chunk->code);
-	const size_t lines_len = len (chunk->lines);
-
-	while (*line_index + 1 < lines_len && offset >= *line_end) {
-		++(*line_index);
-		*line_end += chunk->lines[*line_index];
-	}
-
-	line = *line_index + 1;
-}
-
 #define U(Variant, Ch, Str, Op)                                           \
 	case Variant: {                                                       \
 		spush (Op (spop ()));                                             \
@@ -280,33 +281,42 @@ sync_line (
 		break;                                                            \
 	}
 
+#define to_ptr(x) ((const char*) ((size_t) (x)))
+
 VMResult
 execute (
 	VM*				  vm,
 	const Chunk*	  chunk,
 	tvalue			  x,
 	tvalue			  y,
-	const ImageProps* props)
+	const ImageProps* props,
+	uint8_t			  do_pop)
 {
 	len (vm->stack) = 0;
+	line			= 0;
 	external_builtin_variables (vm, x, y, props);
 
 	opcode* code = chunk->code;
 	opcode* end	 = chunk->code + len (chunk->code);
 
-	size_t line_index = 0;
-	size_t line_end	  = len (chunk->lines) ? chunk->lines[0] : 0;
+	uint* linep		= chunk->lines;
+	uint  remaining = 0;
 
 	uint8_t expanded = 0;
 	while (code < end) {
-		sync_line (chunk, code, &line_index, &line_end);
+		if (remaining == 0) {
+			remaining = *linep++;
+			line++;
+		}
+
+		opcode* last = code;
 
 		// clang-format off
 		switch (*code++) {
-			case Expand: expanded = 1; continue;
-			case Pop: (void)spop(); break;
+			case Expand: expanded = 1; goto next_;
+			case Pop: if (do_pop)(void)spop(); break;
 			case Set: {
-				tvalue variable_value = spop();
+				tvalue variable_value = last(vm->stack);
 
 				index();
 				const char* variable_name = chunk->strings_to_free[index];
@@ -331,6 +341,28 @@ execute (
 				spush (chunk->constants[index]);
 				break;
 			}
+			case Call: {
+				index();
+				uint8_t applied_argc = bte();
+				char* fnname = chunk->strings_to_free[index];
+
+				if (!BuiltinFunctionsTableContains(&vm->functions, fnname)) {
+					err(UnknownBuiltinFunction, args1(fnname));
+				}
+
+				BuiltinFunction f = *BuiltinFunctionsTableGet(&vm->functions, fnname);
+				if (applied_argc != f.argc || len(vm->stack) < f.argc) {
+					err(WrongArgumentQuantity, args3(fnname, to_ptr(f.argc), to_ptr(applied_argc)));
+				}
+
+				tvalue* ptr = vm->stack - f.argc + 1;
+				tvalue result = f.fun(ptr);
+
+				debug("Calling function: %s(argc = %u)", fnname, f.argc);
+
+				spush(result);
+				break;
+			}
 
 			BINARY_INSTRUCTIONS
 			UNARY_INSTRUCTIONS
@@ -338,6 +370,9 @@ execute (
 		// clang-format on
 
 		expanded = 0;
+
+	next_:
+		remaining -= (uint) (code - last);
 	}
 
 	tvalue t = default_last;

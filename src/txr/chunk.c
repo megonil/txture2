@@ -46,11 +46,11 @@ byte (Chunk* chunk, uint8_t b, uint line)
 {
 	push (chunk->code, (opcode) b);
 
-	if (line == chunk->last_line) {
-		last (chunk->lines)++;
-	} else {
+	if (len (chunk->lines) == 0 || line != chunk->last_line) {
 		push (chunk->lines, 1);
 		chunk->last_line = line;
+	} else {
+		last (chunk->lines)++;
 	}
 }
 
@@ -144,13 +144,14 @@ disassemble_const (Chunk* chunk, opcode* code, int expanded)
 }
 
 static opcode*
-disassemble_setload (
+disassemble_instruction_with_index (
 	Chunk*		chunk,
 	opcode*		code,
 	int			expanded,
 	const char* instruction_str)
 {
 	code++;
+
 	size_t		index  = get_index (&code, expanded);
 	const char* string = chunk->strings_to_free[index];
 
@@ -160,12 +161,31 @@ disassemble_setload (
 }
 
 static inline opcode*
-disassemble_load (Chunk* chunk, opcode* code, int expanded)
-{ return disassemble_setload (chunk, code, expanded, "load"); }
+disassemble_load (Chunk* chunk, opcode* code, uint expanded)
+{
+	return disassemble_instruction_with_index (
+		chunk, code, expanded, "load");
+}
 
 static inline opcode*
-disassemble_set (Chunk* chunk, opcode* code, int expanded)
-{ return disassemble_setload (chunk, code, expanded, "set"); }
+disassemble_set (Chunk* chunk, opcode* code, uint expanded)
+{
+	return disassemble_instruction_with_index (
+		chunk, code, expanded, "set");
+}
+
+static opcode*
+disassemble_call (Chunk* chunk, opcode* code, uint expanded)
+{
+	code++;
+	size_t		s	   = get_index (&code, expanded);
+	const char* fnname = chunk->strings_to_free[s];
+
+	uint8_t argc = *code++;
+	printf ("call %s(argc = %u)", fnname, argc);
+
+	return code;
+}
 
 #define B(Variant, Ch, Str, Prec)                                         \
 	case Variant: printf (Str " (%s)", tok_to_string (Ch)); break;
@@ -207,11 +227,12 @@ disassemble (Chunk* chunk)
 	opcode* code = chunk->code;
 	opcode* end	 = chunk->code + len (chunk->code);
 	uint*	line = chunk->lines;
+	debug ("CHUNK LINE PTR: %p", line);
 
 	uint remaining	 = 0;
 	uint source_line = 0;
 
-	int expanded = 0;
+	uint expanded = 0;
 
 	while (code < end) {
 		if (remaining == 0) {
@@ -220,15 +241,17 @@ disassemble (Chunk* chunk)
 		}
 
 		opcode* last = code;
+		printf ("%-7zu ", (size_t) (code - chunk->code));
 
 		// clang-format off
-		printf("%-7zu ", (size_t)(code - chunk->code));
-
 		switch (*code) {
 			case Expand: expanded = 1; code++; printf ("expand"); goto next_;
 			case Pop: code++; printf ("pop"); break;
 			case Load:
 				code = disassemble_load(chunk ,code, expanded);
+				break;
+			case Call:
+				code = disassemble_call(chunk, code, expanded);
 				break;
 			case Set:
 				code = disassemble_set(chunk, code, expanded);
@@ -246,6 +269,7 @@ disassemble (Chunk* chunk)
 				break;
 		}
 		// clang-format on
+
 		expanded = 0;
 	next_:
 		remaining -= (uint) (code - last);

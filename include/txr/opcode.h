@@ -37,6 +37,7 @@ typedef enum : uint8_t {
 	Pop,
 	Set,  // <expression>, const <variable name index> (<variable name> Set
 	Load, // const <variable name index> (<variable name>), Load
+	Call,
 	BINARY_INSTRUCTIONS UNARY_INSTRUCTIONS
 } opcode;
 

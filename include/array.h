@@ -46,6 +46,9 @@ typedef struct {
 #define array_inc(arr) len (arr)++
 
 #define last(arr) arr[len (arr) - 1]
+#define head(arr) arr[0]
+#define first(arr) head (arr)
+
 #define foreach(arr, name) for (size_t name = 0; name < len (arr); ++name)
 
 #define string() array (char)

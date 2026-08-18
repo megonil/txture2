@@ -1,7 +1,7 @@
 lexer_lib = static_library('lexer', ['lexer.c', 'token.c'], include_directories: incs)
 parser_lib = static_library('parser', ['parser.c'], include_directories: incs, link_with: [lexer_lib])
 
-source = files('chunk.c', 'compiler.c', 'value.c', 'vm.c')
+source = files('chunk.c', 'compiler.c', 'value.c', 'vm.c', 'vmbuiltin.c')
 
 txr_libs = [parser_lib]
 
