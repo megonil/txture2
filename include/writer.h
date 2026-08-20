@@ -4,6 +4,8 @@
 #include "color.h"
 #include "image.h"
 
+#include <stdbool.h>
+
 #define OSCS O (simplex, simplex_prepare, 0, simplexf, simplex_clear, 0)
 
 typedef enum {
@@ -21,7 +23,7 @@ static const char* const genstrs[] = {
 
 #define gen_to_str(g) genstrs[g]
 
-void write_colors (Colors, GeneratorType, ImageProps);
+bool write_colors (Colors, GeneratorType, ImageProps);
 
 GeneratorType
 writer_from_string (const char*);

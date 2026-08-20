@@ -227,7 +227,6 @@ disassemble (Chunk* chunk)
 	opcode* code = chunk->code;
 	opcode* end	 = chunk->code + len (chunk->code);
 	uint*	line = chunk->lines;
-	debug ("CHUNK LINE PTR: %p", line);
 
 	uint remaining	 = 0;
 	uint source_line = 0;

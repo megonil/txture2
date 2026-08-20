@@ -1,6 +1,7 @@
 #include "txr/lexer.h"
 
 #include "test.h"
+#include "txr/macrosbuiltin.h"
 #include "txr/token.h"
 #include "unity.h"
 #include "utils.h"
@@ -223,6 +224,11 @@ t (lexer_complex_numbers)
 	prelex ();                                                            \
 	expectT (T)
 
+#define create_ext()                                                      \
+	(lex_one (),                                                          \
+	 (ExtendedToken){                                                     \
+		 .type = t, .buffer = l.buffer, .value = token_value})
+
 #define good() expectE (LOK)
 #define expect_lit(F)                                                     \
 	prelex ();                                                            \
@@ -335,6 +341,65 @@ t (lexer_ambiguous_multiplechars)
 	AMBIGUOUS_MULTIPLECHARS
 
 #undef A
+
+	eof ();
+	end ();
+}
+
+#define BA(Name, Code) #Name " "
+
+void
+expect_ext_impl (Lexer* l, TokenType t, ExtendedToken x)
+{
+	good ();
+	TEST_ASSERT_EQUAL_UINT (x.type, t);
+
+	if (x.type == TTId) {
+		TEST_ASSERT_EQUAL_STRING (x.buffer, l->buffer);
+	} else if (x.type == TTNumber) {
+		TEST_ASSERT_EQUAL_DOUBLE (x.token_value, token_value);
+	}
+}
+
+#define expect_ext(Ext)                                                   \
+	prelex ();                                                            \
+	expect_ext_impl (&l, t, Ext)
+
+t (lexer_builtin_aliases)
+{
+	prelude (BUILTIN_ALIASES);
+#undef BA
+#define BA(Name, Code) expect_ext ((Code));
+	BUILTIN_ALIASES
+#undef BA
+
+	eof ();
+	end ();
+}
+
+t (lexer_builtin_macros)
+{
+	prelude ("expand_v(100)");
+	expect_lit (100.0);
+	expect ('*');
+	id ("M");
+
+	eof ();
+	end ();
+}
+
+t (lexer_macros_random)
+{
+	prelude ("expand_v(sin(PI/2))");
+
+	id ("sin");
+	expect ('(');
+	expect_lit (M_PI);
+	expect ('/');
+	expect_lit (2);
+	expect (')');
+	expect ('*');
+	id ("M");
 
 	eof ();
 	end ();

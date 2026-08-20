@@ -8,6 +8,8 @@
 #include <color.h>
 #include <omp.h>
 #include <osc/simplex.h>
+#include <stdatomic.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <writer.h>
 
@@ -107,15 +109,18 @@ txr_prepare_thread ()
 static void
 txr_gen (void* arg)
 {
-	ForPixelArgs*	args	  = arg;
+	ForPixelArgs* args = arg;
+	if (atomic_load (args->cancel)) return;
+
 	TxrGenState*	gen_s	  = (TxrGenState*) args->gen_state;
 	TxrThreadState* thr_state = (TxrThreadState*) args->thr_state;
 	VMResult		r		  = execute (
 		thr_state->vm, gen_s->chunk, args->x, args->y, &args->props, 1);
 
 	if (r.code.kind != VMOK) {
-		vm_print (r);
-		exit (1);
+		if (!atomic_exchange (args->cancel, true))
+			vm_print (r); // print once
+		return;
 	}
 
 	apply_to_color (args->result, r.color);
@@ -156,14 +161,16 @@ static const GeneratorProps gens[] = {
 
 #define gen(g) gens[g]
 
-void
+bool
 write_colors (Colors c, GeneratorType t, ImageProps props)
 {
 	GeneratorProps gen = gen (t);
 
 	void* state = gen.prepare ();
-	colors_for (c, props, (ForAllPixelsArgs){.f = gen.genf, .prep_thr = gen.prepare_thread, .clear_thr = gen.clear_thread}, state);
+	bool result = colors_for (c, props, (ForAllPixelsArgs){.f = gen.genf, .prep_thr = gen.prepare_thread, .clear_thr = gen.clear_thread}, state);
 	gen.clear (state);
+
+	return !result;
 }
 
 #undef gen

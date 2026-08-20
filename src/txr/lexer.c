@@ -3,6 +3,7 @@
 #include "array.h"
 #include "table.h"
 #include "txr/macro.h"
+#include "txr/macrosbuiltin.h"
 #include "txr/token.h"
 #include "utils.h"
 
@@ -23,6 +24,46 @@ LexError lexerr = LOK;
 
 static KeywordTable keywords;
 
+static void
+builtin_alias (Lexer* l, char* name_, ExtendedToken code_)
+{
+	char*		   name = strdup (name_);
+	ExtendedToken* code = array (ExtendedToken);
+	push (code, code_);
+
+	Macro macro = create_macro (code, 0, MacroAlias);
+	MacroTableInsert (&l->macros, name, macro);
+}
+
+static void
+builtin_macro (
+	Lexer*		   l,
+	char*		   name_,
+	char*		   args_[BUILTIN_MACRO_MAX_ARGS],
+	ExtendedToken* code_,
+	uint		   code_n)
+{
+	char* name = strdup (name_);
+
+	char** args = array (char*);
+
+	for (uint i = 0; i < BUILTIN_MACRO_MAX_ARGS && args_[i] != 0; ++i) {
+		char* arg = strdup (args_[i]);
+		push (args, arg);
+	}
+
+	ExtendedToken* code = array (ExtendedToken);
+	for (uint i = 0; i < code_n; ++i) { push (code, code_[i]); }
+
+	Macro macro = create_macro (code, args, MacroFunction);
+	MacroTableInsert (&l->macros, name, macro);
+}
+
+#define BM(Name, Args, Code)                                              \
+	builtin_macro (l, #Name, Args, Code, static_len (Code));
+
+#define BA(Name, Code) builtin_alias (l, #Name, Code);
+
 void
 lexer_init (Lexer* l, const char* source)
 {
@@ -32,11 +73,15 @@ lexer_init (Lexer* l, const char* source)
 	l->macrobuffer = array (ExtendedToken);
 
 	MacroTableInit (&l->macros);
+	BUILTIN_MACROS;
+	BUILTIN_ALIASES;
 
 	TableInitList (Keyword, &keywords, KEYWORDS);
 }
 
 #undef K
+#undef BM
+#undef BA
 
 void
 lexer_free (Lexer* l)
@@ -284,15 +329,15 @@ macrofn (Lexer* lexer)
 	char**		   args = array (char*);
 	ExtendedToken* code = array (ExtendedToken);
 
-	TokenType t = preprocess_lex (lexer);
+	TokenType t = lex (lexer);
 
 	if (t == ')') goto break_loop;
 
-	for (;; t = preprocess_lex (lexer)) {
+	for (;; t = lex (lexer)) {
 		char* arg = copybuf ();
 		push (args, arg);
 
-		TokenType t = preprocess_lex (lexer);
+		TokenType t = lex (lexer);
 		switch ((uint) t) {
 			case ',': continue;
 			case TTEof:
@@ -301,8 +346,7 @@ macrofn (Lexer* lexer)
 	}
 break_loop:
 
-	for (t = preprocess_lex (lexer); t != TTEof && t != TTEnd;
-		 t = preprocess_lex (lexer)) {
+	for (t = lex (lexer); t != TTEof && t != TTEnd; t = lex (lexer)) {
 		ExtendedToken ext;
 		extended_init (lexer, t, &ext);
 
@@ -327,8 +371,8 @@ clear:
 	free (name);
 	foreach (args, i) { free (args[i]); }
 
-	free (args);
-	free (code);
+	array_free (args);
+	array_free (code);
 }
 
 static void
@@ -439,6 +483,11 @@ preprocess_lex (Lexer* lexer)
 extended:
 	if (len (lexer->macrobuffer) != 0) {
 		ExtendedToken ext = pop (lexer->macrobuffer);
+		if (ext.type == TTId
+			&& MacroTableContains (&lexer->macros, ext.buffer)) {
+			expand (lexer, ext.buffer);
+			goto extended;
+		}
 
 		return extended_extract (lexer, &ext);
 	}

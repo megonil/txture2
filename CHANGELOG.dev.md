@@ -1,3 +1,9 @@
+## `2.0.18` Changelog
+
+- builtin macro functions (expand_v) and aliases (PI, E, etc.)
+- print runtime error only once
+- create image file only if write is ok
+
 ## `2.0.17` Changelog
 
 - builtin function call

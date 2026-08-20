@@ -4,6 +4,8 @@
 #include "image.h"
 #include "utils.h"
 
+#include <stdatomic.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef uint16_t pix;
@@ -25,11 +27,12 @@ void
 apply_to_color (Color*, Color);
 
 typedef struct {
-	ImageProps props;
-	void*	   gen_state;
-	void*	   thr_state;
-	Color*	   result;
-	pxpos	   x, y;
+	ImageProps	 props;
+	void*		 gen_state;
+	void*		 thr_state;
+	Color*		 result;
+	atomic_bool* cancel;
+	pxpos		 x, y;
 } ForPixelArgs;
 
 typedef void (*forpixelfn) (void*);
@@ -42,7 +45,7 @@ typedef struct {
 	clearfn			 clear_thr;
 } ForAllPixelsArgs;
 
-void
+bool
 colors_for (Colors c, ImageProps p, ForAllPixelsArgs thr, void* s);
 
 /// Convert Float with value in [-1..1] to pix

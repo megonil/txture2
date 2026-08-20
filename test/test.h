@@ -32,10 +32,13 @@
 	TEST (lexer_comments, "lexer")                                        \
 	TEST (lexer_character, "lexer")                                       \
 	TEST (lexer_exponential, "lexer")                                     \
+	TEST (lexer_macros_random, "lexer")                                   \
+	TEST (lexer_multiplechars, "lexer")                                   \
+	TEST (lexer_builtin_macros, "lexer")                                  \
+	TEST (lexer_builtin_aliases, "lexer")                                 \
 	TEST (lexer_complex_numbers, "lexer")                                 \
 	TEST (lexer_preprocess_alias, "lexer")                                \
 	TEST (lexer_preprocess_macrofn, "lexer")                              \
-	TEST (lexer_multiplechars, "lexer")                                   \
 	TEST (lexer_ambiguous_multiplechars, "lexer")                         \
 	TEST (lexer_preprocess_macrofn_depth, "lexer")                        \
 	TEST (lexer_preprocess_macrofn_arguments, "lexer")                    \

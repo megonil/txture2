@@ -47,8 +47,8 @@ main (int argc, char* argv[])
 	Colors colors;
 	colors_init (&colors, image.width, image.height);
 
-	write_colors (colors, settings.gentype, image);
-	ppm_image (out_filename, colors, image);
+	bool ok = write_colors (colors, settings.gentype, image);
+	if (ok) ppm_image (out_filename, colors, image);
 
 	free (out_filename);
 	colors_free (colors, image.height);

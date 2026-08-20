@@ -3,6 +3,8 @@
 
 #include <color.h>
 #include <omp.h>
+#include <stdatomic.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -39,10 +41,11 @@ colors_init (Colors* c, uint width, uint height)
 	}
 }
 
-void
+bool
 colors_for (Colors c, ImageProps p, ForAllPixelsArgs thr, void* s)
 {
-#pragma omp parallel
+	atomic_bool cancel = false;
+#pragma omp parallel shared(cancel)
 	{
 		void* thread_state = 0;
 
@@ -51,14 +54,14 @@ colors_for (Colors c, ImageProps p, ForAllPixelsArgs thr, void* s)
 #pragma omp for collapse(2)
 		for (pxpos y = 0; y < p.height; ++y) {
 			for (pxpos x = 0; x < p.width; ++x) {
-
 				ForPixelArgs args
 					= {.x		  = x,
 					   .y		  = y,
 					   .props	  = p,
 					   .gen_state = s,
 					   .result	  = &c[y][x],
-					   .thr_state = thread_state};
+					   .thr_state = thread_state,
+					   .cancel	  = &cancel};
 
 				thr.f (&args);
 			}
@@ -66,6 +69,8 @@ colors_for (Colors c, ImageProps p, ForAllPixelsArgs thr, void* s)
 
 		if (thread_state) thr.clear_thr (thread_state);
 	}
+
+	return atomic_load (&cancel);
 }
 
 void

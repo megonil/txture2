@@ -358,8 +358,6 @@ execute (
 				tvalue* ptr = vm->stack - f.argc + 1;
 				tvalue result = f.fun(ptr);
 
-				debug("Calling function: %s(argc = %u)", fnname, f.argc);
-
 				spush(result);
 				break;
 			}
